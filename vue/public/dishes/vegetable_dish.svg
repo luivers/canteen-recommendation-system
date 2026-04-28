@@ -1,0 +1,18 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="200" height="200" fill="#fff8e1" rx="10" ry="10"/>
+  <!-- 盘子 -->
+  <circle cx="100" cy="100" r="70" fill="#ffffff" stroke="#e0e0e0" stroke-width="2"/>
+  <!-- 蔬菜堆 -->
+  <path d="M100,70 C130,80 140,110 130,130 C140,140 120,150 100,145 C80,150 60,140 70,130 C60,110 70,80 100,70 Z" fill="#66bb6a"/>
+  <!-- 蔬菜纹理 -->
+  <path d="M90,90 L110,85 M95,100 L115,95 M100,110 L120,105" stroke="#388e3c" stroke-width="2"/>
+  <path d="M75,100 L95,95 M80,110 L100,105 M85,120 L105,115" stroke="#388e3c" stroke-width="2"/>
+  <!-- 胡萝卜丝 -->
+  <path d="M85,100 L105,105" stroke="#ff7043" stroke-width="3"/>
+  <path d="M90,110 L110,115" stroke="#ff7043" stroke-width="3"/>
+  <path d="M95,120 L115,125" stroke="#ff7043" stroke-width="3"/>
+  <!-- 装饰 -->
+  <circle cx="135" cy="90" r="5" fill="#ffa726"/>
+  <circle cx="70" cy="110" r="4" fill="#ffa726"/>
+</svg>

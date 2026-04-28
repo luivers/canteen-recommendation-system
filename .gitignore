@@ -1,0 +1,11 @@
+node_modules/
+dist/
+target/
+.idea/
+.vscode/
+*.iml
+*.class
+*.log
+.DS_Store
+__MACOSX/
+uploads/

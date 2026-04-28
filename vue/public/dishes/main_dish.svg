@@ -1,0 +1,19 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="200" height="200" fill="#fff8e1" rx="10" ry="10"/>
+  <!-- 盘子 -->
+  <circle cx="100" cy="100" r="70" fill="#ffffff" stroke="#e0e0e0" stroke-width="2"/>
+  <!-- 米饭 -->
+  <path d="M100,60 C130,70 140,90 130,110 C140,130 120,140 100,135 C80,140 60,130 70,110 C60,90 70,70 100,60 Z" fill="#fff9c4"/>
+  <!-- 米饭纹理 -->
+  <path d="M90,70 L110,80" stroke="#fdd835" stroke-width="1"/>
+  <path d="M110,75 L90,90" stroke="#fdd835" stroke-width="1"/>
+  <path d="M95,95 L115,105" stroke="#fdd835" stroke-width="1"/>
+  <path d="M115,100 L95,115" stroke="#fdd835" stroke-width="1"/>
+  <!-- 菜 -->
+  <circle cx="125" cy="90" r="15" fill="#4caf50"/>
+  <path d="M115,85 L135,95 M115,90 L135,100 M115,95 L135,105" stroke="#388e3c" stroke-width="2"/>
+  <!-- 肉 -->
+  <path d="M75,105 L95,110 L90,125 L70,120 Z" fill="#d84315"/>
+  <path d="M75,105 L85,115 M80,110 L90,120" stroke="#bf360c" stroke-width="1"/>
+</svg>

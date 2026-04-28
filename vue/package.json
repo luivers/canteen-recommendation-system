@@ -1,0 +1,37 @@
+{
+  "name": "higher-education-canteen-recommendation-frontend",
+  "version": "1.0.0",
+  "description": "高校食堂菜品推荐系统前端",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path ../.gitignore"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.1.0",
+    "axios": "^1.5.0",
+    "dayjs": "^1.11.9",
+    "echarts": "^5.4.3",
+    "echarts-wordcloud": "^2.1.0",
+    "element-plus": "^2.3.8",
+    "lodash": "^4.17.21",
+    "pinia": "^2.1.6",
+    "vue": "^3.3.4",
+    "vue-echarts": "^6.6.1",
+    "vue-router": "^4.2.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/eslint-parser": "^7.28.6",
+    "@types/lodash": "^4.14.197",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/eslint-config-prettier": "^8.0.0",
+    "eslint": "^8.45.0",
+    "eslint-plugin-vue": "^10.7.0",
+    "prettier": "^3.0.0",
+    "sass": "^1.64.1",
+    "vite": "^8.0.3"
+  }
+}
