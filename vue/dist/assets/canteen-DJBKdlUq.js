@@ -1,0 +1,1 @@
+import{t as e}from"./api-CP2skCHa.js";var t={getAll(){return e.get(`/api/canteens`)},getById(t){return e.get(`/api/canteens/${t}`)},create(t){return e.post(`/api/canteens`,t)},update(t,n){return e.put(`/api/canteens/${t}`,n)},delete(t){return e.delete(`/api/canteens/${t}`)}};export{t};

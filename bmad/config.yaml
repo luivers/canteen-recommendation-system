@@ -1,0 +1,11 @@
+project_name: "校园食堂推荐系统"
+project_type: "web-app"
+project_level: 3
+output_folder: "docs"
+bmm:
+  workflow_status_file: "docs/bmm-workflow-status.yaml"
+  sprint_status_file: "docs/sprint-status.yaml"
+paths:
+  docs: "docs"
+  stories: "docs/stories"
+  tests: "tests"

@@ -11,7 +11,10 @@
 
       <div class="recommendation-section section-health-goals">
         <div class="health-header">
-          <h2 class="section-title">智能健康目标推荐</h2>
+          <div class="health-title-block">
+            <h2 class="section-title">智能健康目标推荐</h2>
+            <p class="health-subtitle">结合近 7 日营养画像，优先推荐更契合当前目标的菜品</p>
+          </div>
           <el-button
             size="small"
             type="primary"
@@ -25,6 +28,27 @@
 
         <el-card class="health-panel" shadow="never">
           <div v-loading="healthLoading">
+            <div v-if="healthError" class="health-alert">
+              {{ healthError }}
+            </div>
+
+            <div class="health-profile">
+              <div class="health-profile-title">近 7 日营养画像</div>
+              <div v-if="healthProfileItems.length > 0" class="health-profile-grid">
+                <div
+                  v-for="item in healthProfileItems"
+                  :key="item.label"
+                  class="health-profile-item"
+                >
+                  <span class="profile-label">{{ item.label }}</span>
+                  <span class="profile-value">{{ item.value }}</span>
+                </div>
+              </div>
+              <div v-else class="health-profile-empty">
+                暂无近 7 日营养画像，先按可用菜品为你推荐
+              </div>
+            </div>
+
             <div v-if="healthGoals.length > 0" class="health-goals">
               <div class="health-goals-title">你的健康目标</div>
               <div class="health-goals-tags">
@@ -41,16 +65,22 @@
               <div class="health-goals-desc">
                 <div v-for="g in healthGoals" :key="g.code + '_d'" class="health-goal-item">
                   <span class="goal-name">{{ g.title }}</span>
-                  <span class="goal-desc">{{ g.description }}</span>
+                  <span class="goal-desc">{{ g.description || '根据当前营养画像生成' }}</span>
                 </div>
               </div>
+            </div>
+            <div v-else class="health-goals-empty">
+              暂无明确偏离目标，先为你推荐营养表现更均衡的菜品
             </div>
 
             <el-row v-if="healthRecs.length > 0" :gutter="20" class="health-recs">
               <el-col
                 v-for="dish in healthRecs"
                 :key="dish.id"
-                :span="6"
+                :xs="24"
+                :sm="12"
+                :md="6"
+                :lg="6"
               >
                 <el-card class="dish-card" shadow="hover">
                   <div class="dish-image">
@@ -181,80 +211,6 @@
             </el-card>
           </el-col>
         </el-row>
-      </div>
-
-      <div class="recommendation-section section-you-may-like">
-        <div class="section-header">
-          <h2 class="section-title">猜你喜欢</h2>
-          <p class="section-subtitle">根据你的历史行为智能推荐</p>
-        </div>
-        <div class="youmaylike-scroll" v-loading="loading">
-          <div class="youmaylike-inner">
-            <div 
-              class="youmaylike-item"
-              v-for="dish in personalizedDishes"
-              :key="dish.id"
-            >
-              <el-card class="dish-card" shadow="hover">
-                <div class="dish-image">
-                  <el-image 
-                    :src="dish.image" 
-                    fit="cover"
-                    :alt="dish.name"
-                    @click="showDishDetail(dish)"
-                  >
-                    <template #error>
-                      <div class="image-error">
-                        <el-icon><Picture /></el-icon>
-                      </div>
-                    </template>
-                  </el-image>
-                  <div class="reason-badge">{{ dish.recommendReason || '根据你的历史行为推荐' }}</div>
-                </div>
-                <div class="dish-info">
-                  <h4 class="dish-name" @click="showDishDetail(dish)">{{ dish.name }}</h4>
-                  <p class="dish-price">¥{{ dish.price }}</p>
-                  <div class="dish-rating">
-                    <el-rate
-                      v-model="dish.rating"
-                      disabled
-                      show-score
-                      text-color="#ff9900"
-                      :precision="0.1"
-                    />
-                    <span class="sales-count">已售 {{ dish.salesCount }}</span>
-                  </div>
-                  <div class="dish-tags">
-                    <el-tag 
-                      v-for="tag in dish.tags" 
-                      :key="tag"
-                      size="small"
-                      type="info"
-                    >
-                      {{ tag }}
-                    </el-tag>
-                  </div>
-                  <div class="dish-actions">
-                    <el-button 
-                      type="primary" 
-                      size="small"
-                      :disabled="!dish.available"
-                      @click="addToCart(dish)"
-                    >
-                      {{ dish.available ? '加入购物车' : '已售罄' }}
-                    </el-button>
-                    <el-button 
-                      size="small"
-                      @click="showDishDetail(dish)"
-                    >
-                      查看详情
-                    </el-button>
-                  </div>
-                </div>
-              </el-card>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="recommendation-section">
@@ -657,7 +613,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { 
   Food, Picture, Document, ShoppingCart, UserFilled
@@ -665,7 +621,7 @@ import {
 import { dishApi } from '@/api/dish'
 import { orderApi } from '@/api/order'
 import { reviewApi } from "@/api/review";
-import api from "@/api/index";
+import api, { buildApiUrl } from "@/api/index";
 
 import recommendationApi from '@/api/recommendation'
 import { promotionsAPI, combosAPI } from '@/api/promotions'
@@ -675,6 +631,9 @@ import DataDashboard from '@/components/DataDashboard.vue'
 
 const loading = ref(false)
 const personalizedDishes = ref([])
+const recommendationLoading = ref(false)
+const recommendationMessage = ref('')
+const activeRecommendationMode = ref('personalized')
 const hotDishes = ref([])
 const newDishes = ref([])
 const discountDishes = ref([])
@@ -682,12 +641,101 @@ const promoCombos = ref([])
 const promotionTab = ref('dish')
 let midnightTimer = null
 
+const recommendationModes = [
+  {
+    key: 'personalized',
+    label: '综合推荐',
+    reason: '为你个性推荐',
+    description: '融合历史行为、口味偏好和热门趋势推荐'
+  },
+  {
+    key: 'collaborative',
+    label: '相似同学',
+    reason: '相似同学常点',
+    description: '看看与你口味接近的同学最近在吃什么'
+  },
+  {
+    key: 'content',
+    label: '口味匹配',
+    reason: '匹配你的口味',
+    description: '优先推荐更贴近你口味标签的菜品'
+  },
+  {
+    key: 'context',
+    label: '情景推荐',
+    reason: '符合当前情景',
+    description: '结合时段、天气等当前场景推荐'
+  },
+  {
+    key: 'popular',
+    label: '热门推荐',
+    reason: '近期人气很高',
+    description: '按近期销量和评分发现高人气菜品'
+  }
+]
+
+const selectedRecommendationMode = computed(() => {
+  return recommendationModes.find(mode => mode.key === activeRecommendationMode.value) || recommendationModes[0]
+})
+
 const healthLoading = ref(false)
 const healthGoals = ref([])
 const healthRecs = ref([])
+const healthProfile = ref(null)
+const healthError = ref('')
 let orderEventSource = null
 let healthRefreshTimer = null
 let personalizedRefreshTimer = null
+
+const toNumberOrNull = (value) => {
+  if (value === undefined || value === null || value === '') return null
+  const num = Number(value)
+  return Number.isFinite(num) ? num : null
+}
+
+const formatDailyMetric = (value, unit, fractionDigits = 0) => {
+  const num = toNumberOrNull(value)
+  if (num === null) return null
+  return `${num.toFixed(fractionDigits)}${unit}/日`
+}
+
+const formatRatioMetric = (value) => {
+  const num = toNumberOrNull(value)
+  if (num === null) return null
+  return `${(num * 100).toFixed(0)}%`
+}
+
+const healthProfileItems = computed(() => {
+  const profile = healthProfile.value || {}
+  const items = [
+    {
+      label: '平均热量',
+      value: formatDailyMetric(profile.caloriesDailyAvg, 'kcal', 0)
+    },
+    {
+      label: '蛋白质',
+      value: formatDailyMetric(profile.proteinDailyAvg, 'g', 1)
+    },
+    {
+      label: '脂肪',
+      value: formatDailyMetric(profile.fatDailyAvg, 'g', 1)
+    },
+    {
+      label: '碳水',
+      value: formatDailyMetric(profile.carbohydrateDailyAvg, 'g', 1)
+    },
+    {
+      label: '蛋白供能',
+      value: formatRatioMetric(profile.proteinEnergyRatio)
+    },
+    {
+      label: '脂肪供能',
+      value: formatRatioMetric(profile.fatEnergyRatio)
+    }
+  ]
+
+  return items.filter(item => item.value)
+})
 
 // 详情对话框
 const detailVisible = ref(false)
@@ -902,14 +950,22 @@ const formatHealthRecs = (list) => {
 
 const loadHealthGoalRecommendations = async (refreshToken) => {
   healthLoading.value = true
+  healthError.value = ''
   try {
     const res = await recommendationApi.getHealthGoalRecommendations(4, refreshToken)
     const data = res?.data || {}
+    healthProfile.value = data.profile7d || null
     healthGoals.value = Array.isArray(data.goals) ? data.goals : []
     healthRecs.value = formatHealthRecs(data.recommendations)
   } catch (e) {
-    healthGoals.value = []
-    healthRecs.value = []
+    console.error('加载健康目标推荐失败:', e)
+    healthError.value = healthRecs.value.length > 0
+      ? '健康推荐刷新失败，已保留上一次结果'
+      : '健康推荐加载失败，请稍后再试'
+    if (healthRecs.value.length === 0) {
+      healthGoals.value = []
+      healthProfile.value = null
+    }
   } finally {
     healthLoading.value = false
   }
@@ -933,7 +989,6 @@ const schedulePersonalizedRefresh = () => {
     personalizedRefreshTimer = null
     clearPersonalizedCache()
     await Promise.allSettled([
-      loadPersonalizedDishes(true),
       loadHotDishes()
     ])
   }, 800)
@@ -944,7 +999,11 @@ const subscribeOrderEvents = () => {
 
   const connect = () => {
     try {
-      orderEventSource = new EventSource('/api/orders/events')
+      const token = localStorage.getItem('token')
+      orderEventSource = new EventSource(
+        buildApiUrl('/api/orders/events', { token }),
+        { withCredentials: true }
+      )
 
       orderEventSource.addEventListener('order-update', () => {
         scheduleHealthRefresh()
@@ -1077,9 +1136,16 @@ const getCurrentUserCacheSuffix = () => {
 
 const getScopedCacheKey = (baseKey) => `${baseKey}_${getCurrentUserCacheSuffix()}`
 
+const getRecommendationCacheKey = (modeKey = activeRecommendationMode.value) => {
+  return getScopedCacheKey(`${CACHE_KEYS.youMayLike}_${modeKey}`)
+}
+
 const clearPersonalizedCache = () => {
   try {
     localStorage.removeItem(getScopedCacheKey(CACHE_KEYS.youMayLike))
+    recommendationModes.forEach(mode => {
+      localStorage.removeItem(getRecommendationCacheKey(mode.key))
+    })
   } catch (e) {}
 }
 
@@ -1134,7 +1200,7 @@ const handleApiResponse = (response) => {
       }
       // 2.1.2 data是对象，可能有items或records属性
       else if (typeof response.data === 'object') {
-        responseData = response.data.items || response.data.records || []
+        responseData = response.data.items || response.data.records || response.data.recommendations || []
         console.log('检测到嵌套的data结构')
       } else {
         console.warn('响应data不是数组或对象:', response.data)
@@ -1276,37 +1342,89 @@ const loadPromoCombos = async () => {
   }
 }
 
-// 加载个性化推荐
+const getRecommendationReason = (rawDish, fallbackReason) => {
+  const rawReason = rawDish?.reason || rawDish?.recommendSource || rawDish?.recommendReason
+  const reason = String(rawReason || '').trim()
+  if (reason && reason !== 'undefined' && reason !== 'null') {
+    return reason
+  }
+  return fallbackReason || '智能优选'
+}
+
+const buildRecommendationCards = (rawList, fallbackReason) => {
+  const source = Array.isArray(rawList) ? rawList : []
+  return formatDishData(source).map((item, index) => ({
+    ...item,
+    recommendReason: getRecommendationReason(source[index], fallbackReason)
+  }))
+}
+
+const fetchActiveRecommendationList = async (mode) => {
+  if (mode.key === 'personalized') {
+    const response = await recommendationApi.getPersonalizedRecommendationsWithReason(4)
+    return handleApiResponse(response)
+  }
+
+  const response = await recommendationApi.getRecommendationsByStrategy(mode.key, 4)
+  return handleApiResponse(response)
+}
+
+// 加载用户主动选择的推荐策略
 const loadPersonalizedDishes = async (forceRefresh = false) => {
   let usedCached = false
+  const mode = selectedRecommendationMode.value
+  const cacheKey = getRecommendationCacheKey(mode.key)
+  recommendationLoading.value = true
+  recommendationMessage.value = ''
+
   try {
-    console.log('调用API: 获取个性化推荐')
-    const scopedKey = getScopedCacheKey(CACHE_KEYS.youMayLike)
-    const cached = forceRefresh ? null : loadCache(scopedKey, 10 * 60 * 1000)
+    console.log(`调用API: 获取${mode.label}`)
+    const cached = forceRefresh ? null : loadCache(cacheKey, 10 * 60 * 1000)
     if (!forceRefresh && cached && Array.isArray(cached) && cached.length > 0) {
       personalizedDishes.value = cached
       usedCached = true
     }
-    const response = await recommendationApi.getPersonalizedRecommendationsWithReason(4)
-    const responseData = handleApiResponse(response)
-    const formatted = formatDishData(responseData)
-    personalizedDishes.value = formatted.map((item, index) => ({
-      ...item,
-      recommendReason: responseData[index] && responseData[index].reason ? responseData[index].reason : '根据您的历史行为推荐'
-    }))
-    saveCache(scopedKey, personalizedDishes.value)
+
+    let responseData = await fetchActiveRecommendationList(mode)
+    let reason = mode.reason
+
+    if ((!Array.isArray(responseData) || responseData.length === 0) && mode.key !== 'popular') {
+      recommendationMessage.value = `${mode.label}暂无结果，已为你切换热门兜底`
+      const fallbackResponse = await recommendationApi.getRecommendationsByStrategy('popular', 4)
+      responseData = handleApiResponse(fallbackResponse)
+      reason = '近期人气很高'
+    }
+
+    personalizedDishes.value = buildRecommendationCards(responseData, reason)
+    if (personalizedDishes.value.length === 0) {
+      recommendationMessage.value = `${mode.label}暂无可用推荐，请稍后再试`
+    } else {
+      saveCache(cacheKey, personalizedDishes.value)
+    }
   } catch (error) {
-    console.error('加载个性化推荐失败:', error)
+    console.error('加载策略推荐失败:', error)
+    recommendationMessage.value = `${mode.label}加载失败，请稍后重试`
     if (usedCached && personalizedDishes.value.length > 0) {
       return
     }
-    const fallback = loadCache(getScopedCacheKey(CACHE_KEYS.youMayLike), 0, true)
+    const fallback = loadCache(cacheKey, 0, true)
     if (fallback && Array.isArray(fallback) && fallback.length > 0) {
       personalizedDishes.value = fallback
+      recommendationMessage.value = `${mode.label}刷新失败，已保留上一次结果`
     } else {
       personalizedDishes.value = []
     }
+  } finally {
+    recommendationLoading.value = false
   }
+}
+
+const handleRecommendationModeChange = () => {
+  loadPersonalizedDishes(true)
+}
+
+const refreshActiveRecommendationMode = () => {
+  loadPersonalizedDishes(true)
 }
 
 // 加载所有推荐数据
@@ -1342,21 +1460,7 @@ const addToCart = async (dish) => {
   }
   
   try {
-    await orderApi.addToCart({ dishId: dish.id, quantity: 1 })
-
-    const res = await orderApi.getCart()
-    const serverCart = res?.data?.data ?? res?.data
-    const localRaw = (() => {
-      try {
-        return JSON.parse(localStorage.getItem('cart') || '[]')
-      } catch {
-        return []
-      }
-    })()
-    const comboItems = (Array.isArray(localRaw) ? localRaw : []).filter(i => i && i.type === 'COMBO')
-    const merged = [...comboItems, ...(Array.isArray(serverCart) ? serverCart : [])]
-    localStorage.setItem('cart', JSON.stringify(merged))
-    window.dispatchEvent(new Event('storage'))
+    await orderApi.addDishToCart(dish.id, 1)
     ElMessage.success('已添加到购物车')
   } catch (error) {
     console.error('添加到购物车失败:', error)
@@ -1364,7 +1468,7 @@ const addToCart = async (dish) => {
   }
 }
 
-const addComboToCart = (combo) => {
+const addComboToCart = async (combo) => {
   try {
     const dishes = Array.isArray(combo?.dishes) ? combo.dishes : []
     if (dishes.length === 0) {
@@ -1379,35 +1483,8 @@ const addComboToCart = (combo) => {
       return
     }
 
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    const existingIndex = cart.findIndex(i => i?.type === 'COMBO' && String(i?.combo?.id) === String(combo?.id))
-
-    if (existingIndex >= 0) {
-      cart[existingIndex].quantity = Number(cart[existingIndex].quantity || 1) + 1
-      localStorage.setItem('cart', JSON.stringify(cart))
-      ElMessage.success(`已将【${combo?.name || '套餐'}】加入购物车`)
-      return
-    }
-
-    const comboItem = {
-      id: Date.now() + Math.floor(Math.random() * 10000),
-      type: 'COMBO',
-      quantity: 1,
-      combo: {
-        id: combo?.id,
-        name: combo?.name || '未命名套餐',
-        description: combo?.description || '',
-        price: Number(combo?.price) || 0,
-        originalPrice: Number(combo?.originalPrice) || 0,
-        image: combo?.image || getDefaultImageByCategory('主食'),
-        promotionName: combo?.promotionName || ''
-      },
-      dishes: formatted
-    }
-
-    cart.push(comboItem)
-    localStorage.setItem('cart', JSON.stringify(cart))
-    ElMessage.success(`已将【${comboItem.combo.name}】加入购物车`)
+    await orderApi.addComboToCart(combo?.id, 1)
+    ElMessage.success(`已将【${combo?.name || '套餐'}】加入购物车`)
   } catch (error) {
     console.error('加入套餐到购物车失败:', error)
     ElMessage.error('加入失败')
@@ -1440,7 +1517,6 @@ onMounted(async () => {
   loading.value = true
   try {
     await Promise.allSettled([
-      loadPersonalizedDishes(),
       loadNewDishes(),
       loadDiscountDishes(),
       loadPromoCombos(),
@@ -1554,10 +1630,15 @@ onUnmounted(() => {
 }
 
 .health-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
+}
+
+.health-header .el-button {
+  grid-column: 3;
+  justify-self: end;
 }
 
 .section-health-goals .section-title {
@@ -1565,9 +1646,83 @@ onUnmounted(() => {
   margin-bottom: 0;
 }
 
+.health-title-block {
+  grid-column: 2;
+  min-width: 0;
+  text-align: center;
+}
+
+.health-subtitle {
+  margin: 8px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
 .health-panel {
   margin-top: 16px;
   border-radius: 12px;
+}
+
+.health-alert {
+  margin-bottom: 14px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: #b88230;
+  background: #fdf6ec;
+  font-size: 13px;
+}
+
+.health-profile {
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #f7fbf5;
+  border: 1px solid #e1f3d8;
+}
+
+.health-profile-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.health-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.health-profile-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.profile-label {
+  color: #666;
+  white-space: nowrap;
+}
+
+.profile-value {
+  color: #333;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.health-profile-empty,
+.health-goals-empty {
+  color: #909399;
+  font-size: 13px;
 }
 
 .health-goals {
@@ -1599,12 +1754,18 @@ onUnmounted(() => {
 .health-goal-item {
   display: flex;
   gap: 10px;
+  min-width: 0;
 }
 
 .goal-name {
   color: #333;
   font-weight: 500;
   white-space: nowrap;
+}
+
+.goal-desc {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .health-recs {
@@ -1636,6 +1797,13 @@ onUnmounted(() => {
   font-size: 12px;
   color: #666;
   margin-top: 10px;
+}
+
+.health-nutrition span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dish-card {
@@ -1702,23 +1870,8 @@ onUnmounted(() => {
   z-index: 1;
 }
 
-.reason-badge {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  background-color: rgba(64, 158, 255, 0.9);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  z-index: 1;
-}
-
 .section-today-new .section-title {
   border-bottom-color: #67C23A;
-}
-.section-you-may-like .section-title {
-  border-bottom-color: #409EFF;
 }
 .section-header {
   display: flex;
@@ -1732,20 +1885,6 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
-.youmaylike-scroll {
-  overflow-x: auto;
-  padding-bottom: 10px;
-}
-
-.youmaylike-inner {
-  display: flex;
-  gap: 20px;
-}
-
-.youmaylike-item {
-  flex: 0 0 260px;
-  height: 400px; /* 固定高度确保对齐 */
-}
 .dish-info {
   padding: 15px;
   display: flex;
@@ -2013,5 +2152,44 @@ onUnmounted(() => {
 .reply-content {
   font-size: 13px;
   color: #606266;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 12px;
+  }
+
+  .health-header {
+    align-items: flex-start;
+    grid-template-columns: 1fr;
+  }
+
+  .health-title-block {
+    grid-column: 1;
+  }
+
+  .health-header .el-button {
+    grid-column: 1;
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .health-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .health-goal-item {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dish-actions {
+    flex-wrap: wrap;
+  }
+
+  .dish-actions .el-button {
+    flex: 1 1 120px;
+    margin-left: 0;
+  }
 }
 </style>

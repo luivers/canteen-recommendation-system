@@ -34,7 +34,7 @@
         <div v-else>
           <div v-for="item in cartItems" :key="item.id" class="cart-item">
             <div v-if="item.type === 'COMBO'" class="item-info">
-              <el-image :src="toImageUrl(item.combo?.image)" class="item-image" fit="cover">
+              <el-image :src="toImageUrl(item.combo?.imageUrl || item.combo?.image)" class="item-image" fit="cover">
                 <template #error>
                   <div class="image-error">
                     <el-icon><Picture /></el-icon>
@@ -378,13 +378,13 @@ const getTagText = (tag) => {
 // 计算总金额
 const totalAmount = computed(() => {
   return cartItems.value.reduce((total, item) => {
-    if (item?.type === "COMBO") {
-      return (
-        total + (Number(item.combo?.price) || 0) * Number(item.quantity || 0)
-      );
-    }
-    const unitPrice = item.price !== undefined && item.price !== null ? item.price : item.dish.price;
-    return total + unitPrice * item.quantity;
+    const unitPrice =
+      item.price !== undefined && item.price !== null
+        ? Number(item.price)
+        : item?.type === "COMBO"
+          ? Number(item.combo?.price || 0)
+          : Number(item.dish?.price || 0);
+    return total + unitPrice * Number(item.quantity || 0);
   }, 0);
 });
 
@@ -413,46 +413,154 @@ const disabledDate = (time) => {
   return time.getTime() < Date.now() - 8.64e7; // 禁用今天之前的日期
 };
 
-// 加载购物车
+const toPositiveQuantity = (value) => {
+  const numberValue = Math.trunc(Number(value));
+  return numberValue > 0 ? numberValue : 1;
+};
+
+const toPositiveId = (...candidates) => {
+  for (const candidate of candidates) {
+    const numberValue = Number(candidate);
+    if (Number.isInteger(numberValue) && numberValue > 0) return numberValue;
+  }
+  return null;
+};
+
+const normalizeCartItem = (item) => {
+  if (!item || typeof item !== "object") return null;
+
+  const comboId = toPositiveId(item?.combo?.id, item?.comboId);
+  const dishId = toPositiveId(item?.dish?.id, item?.dishId);
+  const quantity = toPositiveQuantity(item?.quantity);
+
+  if (comboId) {
+    const combo = item.combo || {};
+    const dishes = Array.isArray(item.dishes)
+      ? item.dishes
+      : Array.isArray(combo.dishes)
+        ? combo.dishes
+        : [];
+    const comboImage =
+      combo.imageUrl ||
+      combo.image ||
+      item.imageUrl ||
+      item.image ||
+      dishes.find((dish) => dish?.imageUrl || dish?.image)?.imageUrl ||
+      dishes.find((dish) => dish?.imageUrl || dish?.image)?.image ||
+      "";
+    return {
+      ...item,
+      type: "COMBO",
+      comboId,
+      dishId: null,
+      combo: {
+        ...combo,
+        id: comboId,
+        name: combo.name || item.comboName || item.name || "套餐",
+        price: Number(item.price ?? combo.price ?? 0),
+        imageUrl: comboImage,
+        image: comboImage,
+      },
+      dish: null,
+      dishes,
+      quantity,
+      price: Number(item.price ?? combo.price ?? 0),
+      isGift: false,
+    };
+  }
+
+  if (dishId) {
+    const dish = item.dish || {};
+    return {
+      ...item,
+      type: "DISH",
+      dishId,
+      comboId: null,
+      dish: {
+        ...dish,
+        id: dishId,
+        name: dish.name || item.dishName || item.name || "菜品",
+        price: Number(item.price ?? dish.price ?? 0),
+      },
+      combo: null,
+      quantity,
+      price: Number(item.price ?? dish.price ?? 0),
+      isGift: Boolean(item.isGift),
+    };
+  }
+
+  return null;
+};
+
+const normalizeCartItems = (items) =>
+  (Array.isArray(items) ? items : []).map(normalizeCartItem).filter(Boolean);
+
+const toOrderPayloadItem = (item) => {
+  const quantity = toPositiveQuantity(item?.quantity);
+  const comboId = toPositiveId(item?.combo?.id, item?.comboId);
+  if (comboId) return { comboId, quantity };
+
+  const dishId = toPositiveId(item?.dish?.id, item?.dishId);
+  if (dishId) {
+    return {
+      dishId,
+      quantity,
+      isGift: Boolean(item?.isGift),
+    };
+  }
+
+  return null;
+};
+
+const buildOrderPayloadItems = (items) => {
+  const merged = new Map();
+
+  normalizeCartItems(items).forEach((item) => {
+    const payloadItem = toOrderPayloadItem(item);
+    if (!payloadItem) return;
+
+    const key = payloadItem.comboId
+      ? `combo:${payloadItem.comboId}`
+      : `dish:${payloadItem.dishId}:${payloadItem.isGift ? "gift" : "normal"}`;
+    const existing = merged.get(key);
+    if (existing) {
+      existing.quantity += payloadItem.quantity;
+      return;
+    }
+    merged.set(key, payloadItem);
+  });
+
+  return Array.from(merged.values());
+};
+
+const resetCartState = () => {
+  cartItems.value = [];
+  voucherOptions.value = [];
+  selectedVoucherId.value = null;
+};
+
 const loadCart = async () => {
   try {
     loading.value = true;
-    // 调用后端接口获取购物车数据
     const res = await orderApi.getCart();
     const data = res?.data?.data ?? res?.data;
-    const serverItems = Array.isArray(data) ? data : [];
-    const localItemsRaw = (() => {
-      try {
-        return JSON.parse(localStorage.getItem("cart") || "[]");
-      } catch {
-        return [];
-      }
-    })();
-    const comboItems = (Array.isArray(localItemsRaw) ? localItemsRaw : []).filter(
-      (i) => i && i.type === "COMBO",
-    );
-    cartItems.value = [...comboItems, ...serverItems];
-    
-    // 同步更新 localStorage，以备不时之需或保持同步（可选）
-    localStorage.setItem("cart", JSON.stringify(cartItems.value));
+    cartItems.value = normalizeCartItems(data);
   } catch (error) {
-    console.error("加载购物车失败:", error);
+    console.error("加载购物车失败", error);
+    cartItems.value = [];
     ElMessage.error("加载购物车失败");
-    // 降级：如果API失败，尝试读取本地缓存
-    try {
-      const cartData = localStorage.getItem("cart");
-      if (cartData) {
-        cartItems.value = JSON.parse(cartData);
-      }
-    } catch (e) {
-      cartItems.value = [];
-    }
   } finally {
     loading.value = false;
   }
 };
 
 const loadUsableVouchers = async () => {
+  if (cartItems.value.length === 0 || Number(totalAmount.value || 0) <= 0) {
+    voucherOptions.value = [];
+    selectedVoucherId.value = null;
+    return;
+  }
+
   loadingVouchers.value = true;
   try {
     const res = await rewardsApi.getUsableVouchers(
@@ -488,29 +596,17 @@ const loadUsableVouchers = async () => {
 
 // 更新数量
 const updateQuantity = async (item, newQuantity) => {
-  if (newQuantity < 1) return;
+  const quantity = toPositiveQuantity(newQuantity);
+  if (!item?.id || quantity === item.quantity) return;
 
   try {
-    if (item?.type === "COMBO") {
-      item.quantity = newQuantity;
-      localStorage.setItem("cart", JSON.stringify(cartItems.value));
-      return;
-    }
-
-    // 调用后端更新
-    const res = await orderApi.updateCartItem(item.id, newQuantity);
-    
-    // 如果后端返回了最新的 item，使用它来更新本地数据（可能包含最新的价格）
-    const updatedItem = res?.data?.data ?? res?.data;
+    const res = await orderApi.updateCartItem(item.id, quantity);
+    const updatedItem = normalizeCartItem(res?.data?.data ?? res?.data);
     if (updatedItem) {
-        // 保持原有的 dish 对象结构，如果后端只返回了简单的 dish 信息
-        Object.assign(item, updatedItem);
+      Object.assign(item, updatedItem);
     } else {
-        item.quantity = newQuantity;
+      item.quantity = quantity;
     }
-
-    // 同步 localStorage
-    localStorage.setItem("cart", JSON.stringify(cartItems.value));
   } catch (error) {
     ElMessage.error("更新数量失败");
     console.error(error);
@@ -524,20 +620,8 @@ const removeItem = async (itemId) => {
       type: "warning",
     });
 
-    const existed = cartItems.value.find((i) => i?.id === itemId);
-    if (existed?.type === "COMBO") {
-      cartItems.value = cartItems.value.filter((item) => item.id !== itemId);
-      localStorage.setItem("cart", JSON.stringify(cartItems.value));
-      ElMessage.success("删除成功");
-      return;
-    }
-
     await orderApi.removeFromCart(itemId);
-
-    // 更新本地数据
     cartItems.value = cartItems.value.filter((item) => item.id !== itemId);
-    localStorage.setItem("cart", JSON.stringify(cartItems.value));
-
     ElMessage.success("删除成功");
   } catch (error) {
     if (error !== "cancel") {
@@ -555,11 +639,7 @@ const clearCart = async () => {
     });
 
     await orderApi.clearCart();
-
-    // 更新本地数据
-    cartItems.value = [];
-    localStorage.removeItem("cart");
-
+    resetCartState();
     ElMessage.success("购物车已清空");
   } catch (error) {
     if (error !== "cancel") {
@@ -582,30 +662,8 @@ const handleCheckout = async () => {
     return;
   }
 
-  // 过滤有效商品
-  const itemsMap = new Map();
-  for (const item of cartItems.value) {
-    const qty = Number(item?.quantity || 0);
-    if (qty <= 0) continue;
-    
-    if (item?.type === "COMBO") {
-      const comboId = Number(item?.combo?.id);
-      if (!comboId) continue;
-      const key = `combo_${comboId}`;
-      const existing = itemsMap.get(key) || { comboId, quantity: 0, isGift: false };
-      existing.quantity += qty;
-      itemsMap.set(key, existing);
-    } else {
-      const dishId = Number(item?.dish?.id);
-      if (!dishId) continue;
-      const key = `dish_${dishId}_${item.isGift ? 'true' : 'false'}`;
-      const existing = itemsMap.get(key) || { dishId, quantity: 0, isGift: item.isGift || false };
-      existing.quantity += qty;
-      itemsMap.set(key, existing);
-    }
-  }
-  
-  if (itemsMap.size === 0) {
+  const items = buildOrderPayloadItems(cartItems.value);
+  if (items.length === 0) {
     ElMessage.warning("购物车中没有有效商品");
     return;
   }
@@ -614,12 +672,7 @@ const handleCheckout = async () => {
     checkoutLoading.value = true;
 
     const orderData = {
-      items: Array.from(itemsMap.values()).map((item) => ({
-        dishId: item.dishId ? Number(item.dishId) : null,
-        comboId: item.comboId ? Number(item.comboId) : null,
-        quantity: Number(item.quantity),
-        isGift: Boolean(item.isGift)
-      })),
+      items,
       pickupType: pickupType.value,
       reservationTime:
         pickupType.value === "RESERVATION"
@@ -638,9 +691,8 @@ const handleCheckout = async () => {
     ElMessage.success("下单成功");
 
     try {
-      localStorage.removeItem("cart");
       await orderApi.clearCart();
-      cartItems.value = [];
+      resetCartState();
     } catch (clearErr) {
       console.error("清空购物车失败:", clearErr);
       ElMessage.warning("订单已创建，但购物车清空失败，请稍后重试");

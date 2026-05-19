@@ -25,13 +25,41 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import AssociationRules from '@/components/admin/analysis/AssociationRules.vue';
-import UserSegmentation from '@/components/admin/analysis/UserSegmentation.vue';
-import AnomalyDetection from '@/components/admin/analysis/AnomalyDetection.vue';
-import ComparisonAnalysis from '@/components/admin/analysis/ComparisonAnalysis.vue';
+import { defineAsyncComponent, defineComponent, h, ref } from "vue";
+import { ElSkeleton } from "element-plus";
 
-const activeTab = ref('association');
+const AnalysisLoading = defineComponent({
+  name: "AnalysisLoading",
+  setup() {
+    return () =>
+      h("div", { class: "analysis-loading" }, [
+        h(ElSkeleton, { rows: 8, animated: true }),
+      ]);
+  },
+});
+
+const createAsyncAnalysisPanel = (loader) =>
+  defineAsyncComponent({
+    loader,
+    loadingComponent: AnalysisLoading,
+    delay: 120,
+    timeout: 30000,
+  });
+
+const AssociationRules = createAsyncAnalysisPanel(() =>
+  import("@/components/admin/analysis/AssociationRules.vue"),
+);
+const UserSegmentation = createAsyncAnalysisPanel(() =>
+  import("@/components/admin/analysis/UserSegmentation.vue"),
+);
+const AnomalyDetection = createAsyncAnalysisPanel(() =>
+  import("@/components/admin/analysis/AnomalyDetection.vue"),
+);
+const ComparisonAnalysis = createAsyncAnalysisPanel(() =>
+  import("@/components/admin/analysis/ComparisonAnalysis.vue"),
+);
+
+const activeTab = ref("association");
 </script>
 
 <style scoped>
@@ -53,5 +81,9 @@ const activeTab = ref('association');
 }
 .analysis-card {
   min-height: 600px;
+}
+.analysis-loading {
+  min-height: 520px;
+  padding: 16px;
 }
 </style>

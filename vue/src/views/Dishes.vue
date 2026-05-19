@@ -940,26 +940,7 @@ const addToCart = async (dish) => {
   }
 
   try {
-    await orderApi.addToCart({ dishId: dish.id, quantity: 1 });
-
-    const res = await orderApi.getCart();
-    const serverCart = res?.data?.data ?? res?.data;
-    const localRaw = (() => {
-      try {
-        return JSON.parse(localStorage.getItem("cart") || "[]");
-      } catch {
-        return [];
-      }
-    })();
-    const comboItems = (Array.isArray(localRaw) ? localRaw : []).filter(
-      (i) => i && i.type === "COMBO",
-    );
-    const merged = [
-      ...comboItems,
-      ...(Array.isArray(serverCart) ? serverCart : []),
-    ];
-    localStorage.setItem("cart", JSON.stringify(merged));
-    window.dispatchEvent(new Event("storage"));
+    await orderApi.addDishToCart(dish.id, 1);
     ElMessage.success("已添加到购物车");
   } catch (error) {
     console.error("添加到购物车失败:", error);

@@ -1,0 +1,19 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="200" height="200" fill="#fff8e1" rx="10" ry="10"/>
+  <!-- 汤碗 -->
+  <path d="M60,120 C60,80 140,80 140,120 L150,130 C150,160 50,160 50,130 Z" fill="#ffffff" stroke="#e0e0e0" stroke-width="2"/>
+  <!-- 汤 -->
+  <path d="M65,120 C65,90 135,90 135,120 L140,125 C140,150 60,150 60,125 Z" fill="#b3e5fc" opacity="0.8"/>
+  <!-- 波纹 -->
+  <path d="M70,110 Q100,105 130,110" stroke="#4fc3f7" stroke-width="1" fill="none"/>
+  <path d="M75,115 Q100,112 125,115" stroke="#4fc3f7" stroke-width="1" fill="none"/>
+  <!-- 蔬菜块 -->
+  <circle cx="85" cy="115" r="4" fill="#4caf50"/>
+  <circle cx="115" cy="112" r="5" fill="#4caf50"/>
+  <path d="M100,110 L105,115 L100,120 L95,115 Z" fill="#ff7043"/>
+  <!-- 热气 -->
+  <path d="M95,90 C90,75 92,70 95,65" stroke="#e1f5fe" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M105,90 C110,75 108,70 105,65" stroke="#e1f5fe" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M115,90 C120,75 118,70 115,65" stroke="#e1f5fe" stroke-width="2" fill="none" opacity="0.7"/>
+</svg>

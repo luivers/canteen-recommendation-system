@@ -1,8 +1,8 @@
 <template>
   <div class="smart-recommend-container">
     <div class="section-header">
-      <h2 class="section-title">情景智能推荐</h2>
-      <p class="section-subtitle">根据时间、天气和季节智能推荐</p>
+      <h2 class="section-title">智能推荐</h2>
+      <p class="section-subtitle">按当前诉求切换推荐策略</p>
     </div>
     <el-card class="context-card" shadow="hover">
       <div class="context-header">
@@ -44,9 +44,25 @@
         />
       </div>
 
+      <div class="mode-toolbar">
+        <el-radio-group
+          v-model="activeMode"
+          size="small"
+          @change="handleModeChange"
+        >
+          <el-radio-button
+            v-for="mode in recommendationModes"
+            :key="mode.key"
+            :label="mode.key"
+          >
+            {{ mode.label }}
+          </el-radio-button>
+        </el-radio-group>
+      </div>
+
       <div v-loading="loading" class="recommend-content">
         <div v-if="dishes.length === 0" class="empty-state">
-          暂无智能推荐，请稍后再试
+          {{ recommendMessage || "暂无智能推荐，请稍后再试" }}
         </div>
         <el-row v-else :gutter="15">
           <el-col
@@ -72,7 +88,7 @@
                   </template>
                 </el-image>
                 <div class="recommend-reason-tag">
-                  {{ getRecommendReason(dish) }}
+                  {{ dish.recommendReason }}
                 </div>
               </div>
               <div class="dish-info">
@@ -106,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import {
   Timer,
   Sunny,
@@ -122,7 +138,29 @@ import { ElMessage } from "element-plus";
 
 const loading = ref(false);
 const dishes = ref([]);
+const activeMode = ref("personalized");
+const recommendMessage = ref("");
 const emit = defineEmits(["show-detail", "add-to-cart"]);
+
+const recommendationModes = [
+  {
+    key: "personalized",
+    label: "综合推荐",
+    reason: "为你个性推荐",
+    withReason: true,
+  },
+  { key: "collaborative", label: "相似同学", reason: "相似同学常点" },
+  { key: "content", label: "口味匹配", reason: "匹配你的口味" },
+  { key: "context", label: "情景推荐", reason: "符合当前情景" },
+  { key: "popular", label: "热门推荐", reason: "近期人气很高" },
+];
+
+const getModeConfig = (key = activeMode.value) => {
+  return (
+    recommendationModes.find((mode) => mode.key === key) ||
+    recommendationModes[0]
+  );
+};
 
 // --- 1. 时间维度 ---
 const timeContext = reactive({
@@ -287,9 +325,59 @@ const getDefaultImageByCategory = (categoryText) => {
   return categoryMap[categoryText] || "/dishes/main_dish.svg";
 };
 
+const normalizeRecommendationList = (response) => {
+  const data = response?.data ?? response;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.recommendations)) return data.recommendations;
+  if (Array.isArray(data?.content)) return data.content;
+  if (Array.isArray(data?.records)) return data.records;
+  if (Array.isArray(data?.rows)) return data.rows;
+  return [];
+};
+
+const normalizeReasonText = (value) => {
+  const reasonMap = {
+    cf: "相似同学常点",
+    content: "匹配你的口味",
+    context: "符合当前情景",
+    popular: "近期人气很高",
+    collaborative: "相似同学常点",
+    personalized: "为你个性推荐",
+  };
+
+  const rawText = String(value ?? "").trim();
+  const lowerText = rawText.toLowerCase();
+  const mappedText = reasonMap[lowerText] || rawText;
+
+  if (
+    !mappedText ||
+    mappedText === "undefined" ||
+    mappedText === "null" ||
+    !/[\u4e00-\u9fa5]/.test(mappedText)
+  ) {
+    return "";
+  }
+
+  return mappedText.length > 20
+    ? `${mappedText.slice(0, 17)}...`
+    : mappedText;
+};
+
+const resolveRecommendReason = (dish, fallbackReason) => {
+  return (
+    normalizeReasonText(dish.reason) ||
+    normalizeReasonText(dish.recommendSource) ||
+    normalizeReasonText(dish.recommendReason) ||
+    normalizeReasonText(fallbackReason) ||
+    normalizeReasonText(getRecommendReason(dish)) ||
+    "智能优选"
+  );
+};
+
 // 格式化菜品数据
-const formatDishData = (responseData) => {
-  return responseData.map((dish) => {
+const formatDishData = (responseData, fallbackReason = "智能优选") => {
+  return normalizeRecommendationList(responseData).map((dish) => {
     // 处理状态字段
     let isAvailable = true;
     if (dish.status !== undefined) {
@@ -311,7 +399,7 @@ const formatDishData = (responseData) => {
         : originalPrice;
 
     // 处理分类
-    const categoryText = dish.dishCategory || "未知分类";
+    const categoryText = dish.dishCategory || dish.category || "未知分类";
     const displayCategory = getCategoryText(categoryText);
 
     // 处理图片
@@ -332,28 +420,91 @@ const formatDishData = (responseData) => {
       available: isAvailable,
       calories: dish.calories,
       tasteTags: dish.tasteTags,
+      recommendReason: resolveRecommendReason({
+        ...dish,
+        category: displayCategory,
+        originalCategory: dish.dishCategory,
+        tasteTags: dish.tasteTags,
+      }, fallbackReason),
     };
   });
 };
 
 // --- 核心：获取推荐 ---
+const fetchStrategyRecommendations = async (strategyType) => {
+  const res = await recommendationApi.getRecommendationsByStrategy(
+    strategyType,
+    4,
+  );
+  return normalizeRecommendationList(res);
+};
+
+const fetchFallbackRecommendations = async (strategies) => {
+  for (const strategy of strategies.filter(Boolean)) {
+    try {
+      const list = await fetchStrategyRecommendations(strategy);
+      if (list.length > 0) {
+        return {
+          list,
+          reason: getModeConfig(strategy).reason,
+        };
+      }
+    } catch (e) {
+      console.warn(`${strategy}推荐兜底失败`, e);
+    }
+  }
+
+  return { list: [], reason: "智能优选" };
+};
+
 const fetchRecommendations = async () => {
   loading.value = true;
+  recommendMessage.value = "";
+  const mode = getModeConfig();
+
   try {
-    // 调用后端上下文感知推荐策略
-    const res = await recommendationApi.getRecommendationsByStrategy(
-      "context",
-      4,
-    );
-    if (res && (res.data || Array.isArray(res))) {
-      const list = Array.isArray(res) ? res : res.data || [];
-      dishes.value = formatDishData(list);
+    if (mode.withReason) {
+      try {
+        const reasonRes =
+          await recommendationApi.getPersonalizedRecommendationsWithReason(4);
+        const reasonList = normalizeRecommendationList(reasonRes);
+        if (reasonList.length > 0) {
+          dishes.value = formatDishData(reasonList, mode.reason);
+          return;
+        }
+      } catch (reasonError) {
+        console.warn("带理由推荐加载失败，尝试情景推荐兜底", reasonError);
+      }
+    } else {
+      try {
+        const strategyList = await fetchStrategyRecommendations(mode.key);
+        if (strategyList.length > 0) {
+          dishes.value = formatDishData(strategyList, mode.reason);
+          return;
+        }
+      } catch (strategyError) {
+        console.warn(`${mode.label}加载失败，尝试热门推荐兜底`, strategyError);
+        recommendMessage.value = "当前策略加载失败，已尝试热门推荐兜底";
+      }
+    }
+
+    const fallbackStrategies = mode.withReason ? ["context", "popular"] : ["popular"];
+    const fallback = await fetchFallbackRecommendations(fallbackStrategies);
+    dishes.value = formatDishData(fallback.list, fallback.reason);
+    if (dishes.value.length === 0) {
+      recommendMessage.value = "暂无可用推荐，请稍后再试";
     }
   } catch (e) {
+    dishes.value = [];
+    recommendMessage.value = "智能推荐加载失败，请稍后重试";
     ElMessage.error("智能推荐加载失败");
   } finally {
     loading.value = false;
   }
+};
+
+const handleModeChange = () => {
+  fetchRecommendations();
 };
 
 // 智能生成推荐理由
@@ -441,9 +592,11 @@ onMounted(() => {
   display: flex;
   justify-content: space-around;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
   padding-bottom: 20px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .context-item {
@@ -480,8 +633,35 @@ onMounted(() => {
   margin-left: 10px;
 }
 
+.mode-toolbar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.mode-toolbar :deep(.el-radio-group) {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.mode-toolbar :deep(.el-radio-button__inner) {
+  border-radius: 6px;
+  border-left: 1px solid var(--el-border-color);
+}
+
 .recommend-content {
   min-height: 200px;
+}
+
+.empty-state {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
 }
 
 .recommend-dish-card {
@@ -517,12 +697,19 @@ onMounted(() => {
   position: absolute;
   bottom: 8px;
   right: 8px;
+  left: 8px;
+  max-width: calc(100% - 16px);
+  box-sizing: border-box;
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 10px;
   backdrop-filter: blur(4px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .dish-info {

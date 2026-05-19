@@ -1,0 +1,20 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="200" height="200" fill="#fff8e1" rx="10" ry="10"/>
+  <!-- 盘子 -->
+  <circle cx="100" cy="100" r="70" fill="#ffffff" stroke="#e0e0e0" stroke-width="2"/>
+  <!-- 红烧肉 -->
+  <ellipse cx="100" cy="90" rx="30" ry="20" fill="#8b3a3a"/>
+  <!-- 肉块 -->
+  <rect x="80" y="80" width="15" height="15" rx="3" fill="#a84848" stroke="#6d2828" stroke-width="1"/>
+  <rect x="98" y="78" width="15" height="15" rx="3" fill="#a84848" stroke="#6d2828" stroke-width="1"/>
+  <rect x="116" y="82" width="15" height="15" rx="3" fill="#a84848" stroke="#6d2828" stroke-width="1"/>
+  <rect x="85" y="98" width="15" height="15" rx="3" fill="#a84848" stroke="#6d2828" stroke-width="1"/>
+  <rect x="105" y="100" width="15" height="15" rx="3" fill="#a84848" stroke="#6d2828" stroke-width="1"/>
+  <!-- 光泽 -->
+  <path d="M90,85 C100,80 110,80 120,85" stroke="#c65e5e" stroke-width="2" fill="none"/>
+  <!-- 装饰蔬菜 -->
+  <circle cx="130" cy="70" r="5" fill="#4caf50"/>
+  <circle cx="75" cy="110" r="4" fill="#4caf50"/>
+  <circle cx="130" cy="110" r="4" fill="#4caf50"/>
+</svg>

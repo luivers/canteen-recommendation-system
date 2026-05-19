@@ -109,7 +109,7 @@
                   class="order-item-detail"
                 >
                   <el-image
-                    :src="item.dish.image"
+                    :src="getImageUrl(item.dish?.imageUrl || item.dish?.image)"
                     class="item-image"
                     fit="cover"
                   >
@@ -310,9 +310,14 @@
             <template #default="scope"> ¥{{ scope.row.dish.price }} </template>
           </el-table-column>
           <el-table-column prop="quantity" label="数量" width="80" />
+          <el-table-column label="取餐方式" width="110">
+            <template #default="scope">
+              {{ getPickupTypeText(scope.row.pickupType || currentOrder.pickupType) }}
+            </template>
+          </el-table-column>
           <el-table-column label="小计" width="100">
             <template #default="scope">
-              ¥{{ (scope.row.dish.price * scope.row.quantity).toFixed(2) }}
+              ¥{{ (scope.row.subtotal ?? ((scope.row.unitPrice ?? scope.row.dish.price) * scope.row.quantity)).toFixed(2) }}
             </template>
           </el-table-column>
         </el-table>
@@ -584,7 +589,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Picture, Plus, ChatDotRound, Wallet, CreditCard, Select } from "@element-plus/icons-vue";
 import { orderApi } from "@/api/order";
 import { reviewApi } from "@/api/review";
-import api from "@/api/index";
+import api, { buildApiUrl } from "@/api/index";
 
 const loading = ref(false);
 const orders = ref([]);
@@ -653,9 +658,7 @@ const handleFileChange = (uploadFile, uploadFiles) => {
   }
 };
 
-const handleRemove = (file) => {
-  console.log(file);
-};
+const handleRemove = () => {};
 
 // 标签处理方法
 const addCustomTag = () => {
@@ -724,7 +727,7 @@ const getPickupTypeText = (type) => {
     IMMEDIATE: "立即取餐",
     RESERVATION: "预约取餐",
   };
-  return texts[type] || type;
+  return texts[type] || type || "立即取餐";
 };
 
   // 获取支付方式文本
@@ -757,63 +760,46 @@ const formatPickupLocation = (order) => {
   return '未知位置';
 };
 
+const toLocalDateTimeParam = (value, endOfDay = false) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  if (endOfDay) date.setHours(23, 59, 59, 999);
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 19);
+};
+
+const buildOrderQueryParams = () => {
+  const params = {
+    page: Math.max(0, Number(currentPage.value || 1) - 1),
+    size: Number(pageSize.value || 10),
+  };
+
+  if (filterStatus.value) {
+    params.status = filterStatus.value;
+  }
+
+  const startDate = toLocalDateTimeParam(dateRange.value?.[0]);
+  const endDate = toLocalDateTimeParam(dateRange.value?.[1], true);
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+
+  return params;
+};
+
 // 加载订单列表
 const loadOrders = async (silent = false) => {
   try {
     if (!silent) loading.value = true;
-    const params = {
-      page: currentPage.value - 1,
-      size: pageSize.value,
-    };
-    
-    if (filterStatus.value) {
-      params.status = filterStatus.value;
-    }
-
-    // 只有当dateRange有值时才添加日期参数
-    if (dateRange.value?.[0]) {
-      // 转换为本地时间字符串，避免时区偏差
-      const startDate = new Date(dateRange.value[0]);
-      const offset = startDate.getTimezoneOffset() * 60000;
-      const localStartDate = new Date(startDate.getTime() - offset);
-      params.startDate = localStartDate.toISOString().slice(0, 19);
-    }
-    if (dateRange.value?.[1]) {
-      // 克隆结束日期对象，设置为当天的最后一刻
-      const endDate = new Date(dateRange.value[1]);
-      endDate.setHours(23, 59, 59, 999);
-
-      const offset = endDate.getTimezoneOffset() * 60000;
-      const localEndDate = new Date(endDate.getTime() - offset);
-      params.endDate = localEndDate.toISOString().slice(0, 19);
-    }
-
-    console.log("发送订单查询请求，参数:", params);
-    const response = await orderApi.getOrders(params);
-    console.log("收到订单查询响应:", response);
-
-    // 正确处理后端返回的数据格式
-    if (response.data && response.data.content) {
-      orders.value = response.data.content;
-      total.value = response.data.totalElements;
-      console.log(
-        "处理分页数据，订单数量:",
-        orders.value.length,
-        "总数量:",
-        total.value,
-      );
-    } else {
-      // 处理可能的非分页数据格式
-      orders.value = response.data || [];
-      total.value = orders.value.length;
-      console.log("处理非分页数据，订单数量:", orders.value.length);
-    }
+    const response = await orderApi.getOrders(buildOrderQueryParams());
+    const { rows, totalElements } = orderApi.normalizeOrderListResponse(response);
+    orders.value = rows;
+    total.value = Number(totalElements || 0);
   } catch (error) {
-    ElMessage.error("加载订单失败");
-    console.error("加载订单失败:", error);
-    // 确保orders和total被正确初始化
     orders.value = [];
     total.value = 0;
+    ElMessage.error("加载订单失败");
+    console.error("加载订单失败:", error);
   } finally {
     if (!silent) loading.value = false;
   }
@@ -919,7 +905,11 @@ const startPolling = () => {
 const subscribeOrderEvents = () => {
   if (orderEventSource) return;
   try {
-    orderEventSource = new EventSource("/api/orders/events");
+    const token = localStorage.getItem("token");
+    orderEventSource = new EventSource(
+      buildApiUrl("/api/orders/events", { token }),
+      { withCredentials: true },
+    );
     orderEventSource.addEventListener("order-update", (evt) => {
       try {
         const data = JSON.parse(evt.data);

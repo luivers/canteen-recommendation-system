@@ -60,52 +60,44 @@ import { ElMessage } from "element-plus";
 import { ArrowDown, More } from "@element-plus/icons-vue";
 import { notificationApi } from "@/api/notification";
 import { userApi } from "@/api/user";
+import { resolveStaticUrl } from "@/api";
+import { useUserStore } from "@/stores/user";
 
 const router = useRouter();
 const route = useRoute();
+const userStore = useUserStore();
 
 // 计算属性
 const activeMenu = computed(() => route.path);
 
 const isLoggedIn = computed(() => {
-  return !!localStorage.getItem("token");
+  return userStore.isAuthenticated;
 });
 
 const isAdmin = computed(() => {
-  const userRole = localStorage.getItem("userRole");
-  return userRole === "ADMIN" || userRole === "WINDOW_MANAGER";
+  return userStore.canAccessAdmin;
 });
 
-const userAvatar = ref("/default-avatar.png");
-const userName = ref("用户");
+const resolveAvatar = (avatar) => resolveStaticUrl(avatar, "/default-avatar.png");
+
+const userAvatar = computed(() => resolveAvatar(userStore.userInfo?.avatar));
+const userName = computed(() => {
+  return userStore.userInfo?.name || userStore.userInfo?.username || "用户";
+});
 
 const updateUserInfo = async () => {
-  // 首先尝试从本地存储获取
-  let userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-  
   // 如果已登录，尝试从后端获取最新信息
   if (isLoggedIn.value) {
     try {
       const res = await userApi.getCurrentUser();
-      if (res && res.data) {
-        userInfo = res.data;
-        // 更新本地存储
-        localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      const latestUserInfo = res?.data?.data || res?.data;
+      if (latestUserInfo) {
+        userStore.updateUserInfo(latestUserInfo);
       }
     } catch (error) {
       console.error("获取最新用户信息失败", error);
     }
   }
-
-  const avatar = userInfo.avatar;
-  if (!avatar) {
-    userAvatar.value = "/default-avatar.png";
-  } else if (avatar.startsWith("http") || avatar.startsWith("/uploads/") || avatar.startsWith("data:image")) {
-    userAvatar.value = avatar;
-  } else {
-    userAvatar.value = `/uploads/${avatar}`;
-  }
-  userName.value = userInfo.name || userInfo.username || "用户";
 };
 
 const unreadCount = ref(0);
@@ -124,12 +116,7 @@ const handleMenuSelect = (index) => {
 
 // 处理退出登录
 const handleLogout = () => {
-  // 清除本地存储
-  localStorage.removeItem("token");
-  localStorage.removeItem("userInfo");
-  localStorage.removeItem("userRole");
-  localStorage.removeItem("cart");
-
+  userStore.logout();
   ElMessage.success("已退出登录");
   router.push("/login");
 };

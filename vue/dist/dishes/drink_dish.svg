@@ -1,0 +1,21 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="200" height="200" fill="#fff8e1" rx="10" ry="10"/>
+  <!-- 杯子 -->
+  <path d="M70,140 L130,140 L120,70 L80,70 Z" fill="#ffffff" stroke="#e0e0e0" stroke-width="2"/>
+  <!-- 杯把 -->
+  <path d="M130,90 A15,15 0 1,0 145,105 A15,15 0 1,0 130,120" fill="none" stroke="#e0e0e0" stroke-width="2"/>
+  <!-- 饮料 -->
+  <path d="M75,140 L125,140 L122,90 L78,90 Z" fill="#81d4fa"/>
+  <!-- 渐变效果 -->
+  <path d="M75,140 L125,140 L122,120 L78,120 Z" fill="#4fc3f7" opacity="0.7"/>
+  <!-- 气泡 -->
+  <circle cx="85" cy="110" r="3" fill="#ffffff" opacity="0.7"/>
+  <circle cx="100" cy="100" r="2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="110" cy="115" r="2.5" fill="#ffffff" opacity="0.7"/>
+  <circle cx="90" cy="95" r="1.5" fill="#ffffff" opacity="0.7"/>
+  <circle cx="115" cy="105" r="1.5" fill="#ffffff" opacity="0.7"/>
+  <!-- 柠檬片 -->
+  <path d="M100,85 A5,2 0 1,0 100,89 A5,2 0 1,0 100,85 Z" fill="#fff176" stroke="#fdd835" stroke-width="1"/>
+  <path d="M100,87 L105,87" stroke="#fdd835" stroke-width="1"/>
+</svg>

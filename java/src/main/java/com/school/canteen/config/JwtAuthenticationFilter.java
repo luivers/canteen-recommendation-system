@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             logger.debug("[Request Info] Method: {}", method);
             logger.debug("[Request Info] URI: {}", requestUri);
             logger.debug("[Request Info] Full URL: {}", fullUrl);
-            logger.debug("[Request Info] Query String: {}", (queryString != null ? queryString : "null"));
+            logger.debug("[Request Info] Query String: {}", maskSensitiveQuery(queryString));
             logger.debug("[Request Info] Authorization Header: {}", request.getHeader("Authorization"));
             
             // 检查是否为公开端点
@@ -59,10 +59,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             
             // 无论是否为公开端点，都尝试验证JWT token（如果存在）
             // 这样公开端点也可以获取用户信息（用于个性化显示）
-            String authorizationHeader = request.getHeader("Authorization");
+            String token = resolveToken(request, requestUri);
             
-            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-                String token = authorizationHeader.substring(7);
+            if (token != null) {
                 logger.debug("[Token] Found token: {}...", token.substring(0, Math.min(10, token.length())));
                 
                 try {
@@ -92,7 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     logger.error("[Token] Error during validation: {}", e.getMessage(), e);
                 }
             } else {
-                logger.debug("[Token] No valid Authorization header found");
+                logger.debug("[Token] No token found");
             }
             
             // 对于公开端点，即使没有token也允许访问
@@ -177,5 +176,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         logger.debug("[Endpoint Check] NO MATCH: Protected endpoint");
         return false;
+    }
+
+    private String resolveToken(HttpServletRequest request, String requestUri) {
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+
+        if ("/api/orders/events".equals(requestUri)) {
+            String token = request.getParameter("token");
+            if (token != null && !token.isBlank()) {
+                if (token.startsWith("Bearer ")) {
+                    return token.substring(7);
+                }
+                return token;
+            }
+        }
+
+        return null;
+    }
+
+    private String maskSensitiveQuery(String queryString) {
+        if (queryString == null || queryString.isBlank()) {
+            return "null";
+        }
+        return queryString.replaceAll("(?i)(^|&)(token|authorization)=([^&]*)", "$1$2=***");
     }
 }

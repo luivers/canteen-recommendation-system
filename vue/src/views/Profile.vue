@@ -455,7 +455,7 @@ import { ref, reactive, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { InfoFilled, Plus } from "@element-plus/icons-vue";
-import api from "@/api/index";
+import api, { resolveStaticUrl } from "@/api/index";
 import { useUserStore } from "@/stores/user";
 import { userApi } from "@/api/user";
 import dayjs from "dayjs";
@@ -624,11 +624,7 @@ const tagCategories = {
 
 // 获取图片URL
 const getImageUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http") || url.startsWith("/uploads/") || url.startsWith("data:image")) {
-    return url;
-  }
-  return `/uploads/${url}`;
+  return resolveStaticUrl(url);
 };
 
 // 图片上传前检查
@@ -721,6 +717,11 @@ const saveUserInfo = async () => {
       userInfo.phone = userForm.phone;
       userInfo.email = userForm.email;
       localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      userStore.updateUserInfo({
+        avatar: userForm.avatar,
+        phone: userForm.phone,
+        email: userForm.email,
+      });
       
       // 触发 storage 事件，通知其他组件更新（在同一标签页中通常需要手动通知或使用 store）
       // 这里简单刷新页面或使用 store 会更好，但直接修改 localStorage 后，UserNavBar 的计算属性不会自动响应

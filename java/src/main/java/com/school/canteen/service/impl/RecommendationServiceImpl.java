@@ -246,8 +246,17 @@ public class RecommendationServiceImpl implements RecommendationService {
         return result;
     }
 
-    private static final int CF_TARGET_COUNT = 2;
-    private static final int CONTENT_TARGET_COUNT = 2;
+    /** RRF 融合常数。k 越大，头部排名的优势越被抑制，融合越平滑。60 为业界常用经验值。 */
+    private static final int RRF_K = 60;
+    /** 每个策略召回的候选池大小，远大于最终 limit 以保证融合后仍有充足候选。 */
+    private static final int CANDIDATE_POOL = 30;
+
+    private record WeightProfile(double cf, double content, double popular, double context) {}
+
+    private static final WeightProfile W_NEW_USER        = new WeightProfile(0.0, 0.0, 0.7, 0.3);
+    private static final WeightProfile W_PREFERENCE      = new WeightProfile(0.0, 0.6, 0.2, 0.2);
+    private static final WeightProfile W_EXISTING_ORDER  = new WeightProfile(0.2, 0.3, 0.3, 0.2);
+    private static final WeightProfile W_REVIEW_BASED    = new WeightProfile(0.45, 0.30, 0.15, 0.10);
 
     private enum YouMayLikeMode {
         PREFERENCE_BASED,
@@ -258,41 +267,94 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     private LinkedHashMap<Dish, String> buildYouMayLikeRecommendations(Long userId, int limit) {
         int safeLimit = Math.max(1, Math.min(50, limit));
-        YouMayLikeMode mode = resolveYouMayLikeMode(userId);
+        WeightProfile w = pickWeights(resolveYouMayLikeMode(userId));
 
-        int cfTarget = 0;
-        int contentTarget = 0;
+        // 1) 各策略独立召回候选池（权重为 0 时跳过，避免无效计算）
+        List<Dish> cfList      = w.cf()      > 0 ? safeRecommend("collaborative", userId, CANDIDATE_POOL) : Collections.emptyList();
+        List<Dish> contentList = w.content() > 0 ? safeRecommend("content",       userId, CANDIDATE_POOL) : Collections.emptyList();
+        List<Dish> popularList = w.popular() > 0 ? safeRecommend("popular",       userId, CANDIDATE_POOL) : Collections.emptyList();
+        List<Dish> contextList = w.context() > 0 ? safeRecommend("context",       userId, CANDIDATE_POOL) : Collections.emptyList();
 
-        if (mode == YouMayLikeMode.PREFERENCE_BASED) {
-            // 用户明确设置了偏好时，优先按偏好推荐，保证“猜你喜欢”实时反映偏好变化
-            contentTarget = safeLimit;
-        } else if (mode == YouMayLikeMode.REVIEW_BASED) {
-            cfTarget = Math.min(CF_TARGET_COUNT, safeLimit);
-            contentTarget = Math.min(CONTENT_TARGET_COUNT, Math.max(0, safeLimit - cfTarget));
-        } else if (mode == YouMayLikeMode.EXISTING_WITHOUT_REVIEW) {
-            contentTarget = Math.min(CONTENT_TARGET_COUNT, safeLimit);
+        // 2) RRF 融合：分数按 weight / (k + rank) 累加，多策略命中自然加权排前
+        Map<Long, Double> fused = new HashMap<>();
+        Map<Long, Dish> dishById = new HashMap<>();
+        Map<Long, String> primarySource = new HashMap<>();
+        Map<Long, Double> maxContribution = new HashMap<>();
+
+        accumulate(cfList,      w.cf(),      "cf",      fused, dishById, primarySource, maxContribution);
+        accumulate(contentList, w.content(), "content", fused, dishById, primarySource, maxContribution);
+        accumulate(popularList, w.popular(), "popular", fused, dishById, primarySource, maxContribution);
+        accumulate(contextList, w.context(), "context", fused, dishById, primarySource, maxContribution);
+
+        // 3) 排序并截断
+        LinkedHashMap<Dish, String> result = fused.entrySet().stream()
+                .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
+                .limit(safeLimit)
+                .collect(Collectors.toMap(
+                        e -> dishById.get(e.getKey()),
+                        e -> reasonOf(primarySource.get(e.getKey())),
+                        (a, b) -> a,
+                        LinkedHashMap::new));
+
+        // 4) 候选不足时用热门兜底
+        if (result.size() < safeLimit) {
+            Set<Long> seen = result.keySet().stream()
+                    .map(Dish::getId).filter(Objects::nonNull).collect(Collectors.toSet());
+            for (Dish d : safeRecommend("popular", userId, safeLimit * 2)) {
+                if (result.size() >= safeLimit) break;
+                if (isDishRecommendable(d) && seen.add(d.getId())) {
+                    result.put(d, "热门推荐");
+                }
+            }
         }
+        return result;
+    }
 
-        LinkedHashMap<Dish, String> merged = new LinkedHashMap<>();
-        Set<Long> seenIds = new HashSet<>();
-
-        if (cfTarget > 0) {
-            List<Dish> cf = safeRecommend("collaborative", userId, Math.max(cfTarget * 4, cfTarget + 8));
-            appendFromSource(merged, seenIds, cf, cfTarget, "根据与您相似用户的评价推荐");
+    private void accumulate(List<Dish> ranked, double weight, String tag,
+                            Map<Long, Double> fused,
+                            Map<Long, Dish> dishById,
+                            Map<Long, String> primarySource,
+                            Map<Long, Double> maxContribution) {
+        if (weight <= 0 || ranked == null || ranked.isEmpty()) {
+            return;
         }
-
-        if (contentTarget > 0) {
-            List<Dish> content = safeRecommend("content", userId, Math.max(contentTarget * 4, contentTarget + 8));
-            appendFromSource(merged, seenIds, content, contentTarget, "根据您的个人偏好推荐");
+        int rank = 1;
+        for (Dish d : ranked) {
+            if (!isDishRecommendable(d)) {
+                continue;
+            }
+            Long id = d.getId();
+            double contribution = weight / (RRF_K + rank);
+            fused.merge(id, contribution, (a, b) -> a + b);
+            dishById.putIfAbsent(id, d);
+            Double prevMax = maxContribution.get(id);
+            if (prevMax == null || contribution > prevMax) {
+                maxContribution.put(id, contribution);
+                primarySource.put(id, tag);
+            }
+            rank++;
         }
+    }
 
-        int need = safeLimit - merged.size();
-        if (need > 0) {
-            List<Dish> popular = safeRecommend("popular", userId, Math.max(need * 4, safeLimit + 12));
-            appendFromSource(merged, seenIds, popular, need, "热门推荐");
+    private WeightProfile pickWeights(YouMayLikeMode mode) {
+        return switch (mode) {
+            case REVIEW_BASED            -> W_REVIEW_BASED;
+            case PREFERENCE_BASED        -> W_PREFERENCE;
+            case EXISTING_WITHOUT_REVIEW -> W_EXISTING_ORDER;
+            case NEW_USER                -> W_NEW_USER;
+        };
+    }
+
+    private String reasonOf(String tag) {
+        if (tag == null) {
+            return "为你推荐";
         }
-
-        return merged;
+        return switch (tag) {
+            case "cf"      -> "根据与您相似用户的评价推荐";
+            case "content" -> "根据您的个人偏好推荐";
+            case "context" -> "当前时段/天气推荐";
+            default        -> "热门推荐";
+        };
     }
 
     private List<Dish> safeRecommend(String strategyType, Long userId, int limit) {
@@ -309,32 +371,6 @@ public class RecommendationServiceImpl implements RecommendationService {
         } catch (RuntimeException e) {
             log.warn("{} recommendation failed for user {}: {}", strategyType, userId, e.getMessage());
             return Collections.emptyList();
-        }
-    }
-
-    private void appendFromSource(LinkedHashMap<Dish, String> merged,
-                                  Set<Long> seenIds,
-                                  List<Dish> source,
-                                  int maxAdd,
-                                  String reason) {
-        if (maxAdd <= 0 || source == null || source.isEmpty()) {
-            return;
-        }
-
-        int added = 0;
-        for (Dish dish : source) {
-            if (added >= maxAdd) {
-                break;
-            }
-            if (!isDishRecommendable(dish)) {
-                continue;
-            }
-            Long dishId = dish.getId();
-            if (!seenIds.add(dishId)) {
-                continue;
-            }
-            merged.put(dish, reason);
-            added++;
         }
     }
 

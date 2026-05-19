@@ -123,6 +123,21 @@ let categoryChart = null;
 const categoryList = ref([]);
 const selectedCategory = ref("");
 
+defineExpose({
+    getDataURL: (opts) => {
+        const activeChart = {
+            sales: salesChart,
+            rating: ratingChart,
+            trend: trendChart,
+            category: categoryChart,
+        }[activeTab.value];
+        return activeChart ? activeChart.getDataURL(opts) : "";
+    },
+    resize: () => {
+        handleResize();
+    },
+});
+
 // Common chart options
 const getBarOption = (title, xName, yName, data, color = "#409EFF", labelFormatter = null) => {
   return {

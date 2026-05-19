@@ -1,17 +1,81 @@
 import api from "./index";
 
+const toPositiveInteger = (value, fieldName) => {
+  const numberValue = Number(value);
+  if (!Number.isInteger(numberValue) || numberValue <= 0) {
+    throw new Error(`${fieldName} must be a positive integer`);
+  }
+  return numberValue;
+};
+
+const normalizeCartPayload = ({ dishId, comboId, quantity = 1 } = {}) => {
+  const resolvedQuantity = toPositiveInteger(quantity, "quantity");
+  const hasDishId = dishId !== undefined && dishId !== null && dishId !== "";
+  const hasComboId = comboId !== undefined && comboId !== null && comboId !== "";
+
+  if (hasDishId === hasComboId) {
+    throw new Error("cart item must contain exactly one of dishId or comboId");
+  }
+
+  if (hasComboId) {
+    return {
+      comboId: toPositiveInteger(comboId, "comboId"),
+      quantity: resolvedQuantity,
+    };
+  }
+
+  return {
+    dishId: toPositiveInteger(dishId, "dishId"),
+    quantity: resolvedQuantity,
+  };
+};
+
+export const normalizeOrderListResponse = (response) => {
+  const payload = response?.data?.data ?? response?.data ?? response;
+
+  if (Array.isArray(payload)) {
+    return {
+      rows: payload,
+      totalElements: payload.length,
+    };
+  }
+
+  if (payload && Array.isArray(payload.content)) {
+    return {
+      rows: payload.content,
+      totalElements: Number(payload.totalElements ?? payload.content.length),
+    };
+  }
+
+  if (payload && Array.isArray(payload.records)) {
+    return {
+      rows: payload.records,
+      totalElements: Number(payload.total ?? payload.records.length),
+    };
+  }
+
+  if (payload && Array.isArray(payload.rows)) {
+    return {
+      rows: payload.rows,
+      totalElements: Number(payload.total ?? payload.rows.length),
+    };
+  }
+
+  return {
+    rows: [],
+    totalElements: 0,
+  };
+};
+
 export const orderApi = {
-  // 创建订单
   createOrder: (orderData) => {
     return api.post("/api/orders", orderData);
   },
 
-  // 获取订单列表
   getOrders: (params) => {
     return api.get("/api/orders", { params });
   },
 
-  // 获取订单详情
   getOrder: (orderId) => {
     return api.get(`/api/orders/${orderId}`);
   },
@@ -20,19 +84,17 @@ export const orderApi = {
     return api.delete(`/api/orders/${orderId}`);
   },
 
-  // 取消订单
   cancelOrder: (orderId) => {
     return api.put(`/api/orders/${orderId}/cancel`);
   },
 
-  // 确认取餐
   confirmPickup: (orderOrId) => {
     const resolvedId =
       typeof orderOrId === "object"
         ? (orderOrId?.id ?? orderOrId?.orderId ?? orderOrId?.order?.id)
         : orderOrId;
     if (resolvedId == null || resolvedId === "") {
-      return Promise.reject(new Error("订单ID缺失"));
+      return Promise.reject(new Error("Order id is required"));
     }
     return api
       .put(`/api/orders/${resolvedId}/confirm-pickup`)
@@ -44,43 +106,53 @@ export const orderApi = {
       });
   },
 
-  // 开始制作
   prepareOrder: (orderId) => {
     return api.put(`/api/orders/${orderId}/prepare`);
   },
 
-  // 制作完成
   readyOrder: (orderId) => {
     return api.put(`/api/orders/${orderId}/ready`);
   },
 
-  // 标记订单已支付（前端主动调用）
   markPaid: (orderId, payload) => {
     return api.post(`/api/payments/orders/${orderId}/success`, payload);
   },
 
-  // 获取购物车
   getCart: () => {
     return api.get("/api/orders/cart");
   },
 
-  // 添加菜品到购物车
   addToCart: (cartItem) => {
-    return api.post("/api/orders/cart", cartItem);
+    return api.post("/api/orders/cart", normalizeCartPayload(cartItem));
   },
 
-  // 更新购物车项
+  addDishToCart: (dishId, quantity = 1) => {
+    return api.post(
+      "/api/orders/cart",
+      normalizeCartPayload({ dishId, quantity }),
+    );
+  },
+
+  addComboToCart: (comboId, quantity = 1) => {
+    return api.post(
+      "/api/orders/cart",
+      normalizeCartPayload({ comboId, quantity }),
+    );
+  },
+
   updateCartItem: (itemId, quantity) => {
-    return api.put(`/api/orders/cart/${itemId}`, { quantity });
+    return api.put(`/api/orders/cart/${itemId}`, {
+      quantity: toPositiveInteger(quantity, "quantity"),
+    });
   },
 
-  // 删除购物车项
   removeFromCart: (itemId) => {
     return api.delete(`/api/orders/cart/${itemId}`);
   },
 
-  // 清空购物车
   clearCart: () => {
     return api.delete("/api/orders/cart");
   },
+
+  normalizeOrderListResponse,
 };

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { ElMessage } from "element-plus";
+import { useUserStore } from "@/stores/user";
 
 const routes = [
   {
@@ -236,8 +237,23 @@ const router = createRouter({
   routes,
 });
 
+const resolveAllowedRoles = (to) => {
+  const matchWithAllowed = [...(to.matched || [])]
+    .reverse()
+    .find((record) => Array.isArray(record.meta?.allowedRoles));
+
+  if (matchWithAllowed) {
+    return matchWithAllowed.meta.allowedRoles;
+  }
+
+  return to.meta.requiresAdmin ? ["ADMIN", "WINDOW_MANAGER"] : [];
+};
+
 // 路由守卫
 router.beforeEach((to, from, next) => {
+  const userStore = useUserStore();
+  userStore.checkLoginStatus();
+
   // 设置页面标题
   if (to.meta.title) {
     document.title = `${to.meta.title} - 学校食堂菜品推荐系统`;
@@ -245,8 +261,7 @@ router.beforeEach((to, from, next) => {
 
   // 检查是否需要认证
   if (to.meta.requiresAuth) {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!userStore.isAuthenticated) {
       // 未登录，重定向到登录页
       next("/login");
       return;
@@ -254,33 +269,19 @@ router.beforeEach((to, from, next) => {
 
     // 检查是否需要管理员权限
     if (to.meta.requiresAdmin) {
-      const userRole = localStorage.getItem("userRole");
-      if (userRole !== "ADMIN" && userRole !== "WINDOW_MANAGER") {
+      const allowedRoles = resolveAllowedRoles(to);
+      if (!userStore.hasAnyRole(allowedRoles)) {
         // 非管理员用户尝试访问管理页面
         ElMessage.warning("您没有权限访问此页面");
         next("/home");
         return;
       }
-      const role = userRole || "";
-      const matched = to.matched || [];
-      const matchWithAllowed = [...matched]
-        .reverse()
-        .find((record) => Array.isArray(record.meta?.allowedRoles));
-      if (matchWithAllowed) {
-        const allowedRoles = matchWithAllowed.meta.allowedRoles;
-        if (!allowedRoles.includes(role)) {
-          ElMessage.warning("您没有权限访问此页面");
-          next("/home");
-          return;
-        }
-      }
     }
   }
 
   // 如果已登录，不允许访问登录和注册页
-  const token = localStorage.getItem("token");
-  if (token && (to.name === "Login" || to.name === "Register")) {
-    next("/home");
+  if (userStore.isAuthenticated && (to.name === "Login" || to.name === "Register")) {
+    next(userStore.canAccessAdmin ? "/admin" : "/home");
     return;
   }
 

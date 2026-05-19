@@ -15,7 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaRepositories
 @EnableScheduling 
 @org.springframework.scheduling.annotation.EnableAsync
-public class CanteenOrderingApplication {
+public class     CanteenOrderingApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(CanteenOrderingApplication.class, args);

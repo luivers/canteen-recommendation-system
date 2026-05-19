@@ -111,10 +111,10 @@ const handleLogin = async () => {
     ElMessage.success("登录成功");
 
     // 根据用户角色跳转到不同页面
-    if (userStore.isAdmin()) {
+    if (userStore.canAccessAdmin) {
       router.push("/admin");
     } else {
-      router.push("/");
+      router.push("/home");
     }
   } catch (error) {
     console.error("登录错误:", error);

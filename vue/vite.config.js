@@ -39,9 +39,23 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["vue", "element-plus"],
-          utils: ["axios"],
+        manualChunks(id) {
+          if (id.includes("node_modules/axios")) {
+            return "utils";
+          }
+          if (
+            id.includes("node_modules/echarts") ||
+            id.includes("node_modules/zrender") ||
+            id.includes("node_modules/echarts-wordcloud")
+          ) {
+            return "charts";
+          }
+          if (
+            id.includes("node_modules/vue") ||
+            id.includes("node_modules/element-plus")
+          ) {
+            return "vendor";
+          }
         },
       },
     },

@@ -209,10 +209,11 @@
             <div
               v-show="isRevenueTrend"
               ref="revenueTrendChartRef"
+              class="revenue-trend-chart"
               :style="{ height: chartHeight + 'px' }"
             ></div>
             <OrdersTrendChart
-              v-show="isOrdersTrend"
+              v-if="isOrdersTrend"
               ref="ordersTrendChartComponentRef"
               :start-date="chartStartDate"
               :end-date="chartEndDate"
@@ -222,7 +223,7 @@
               :refresh-key="ordersTrendRefreshKey"
             />
             <HotDishRanking
-              v-show="isDishSalesRanking"
+              v-if="isDishSalesRanking"
               ref="dishSalesRankingComponentRef"
               :start-date="chartStartDate"
               :end-date="chartEndDate"
@@ -232,7 +233,7 @@
               :refresh-key="dishSalesRankingRefreshKey"
             />
             <UserActivePeriods
-              v-show="isUserActivePeriods"
+              v-if="isUserActivePeriods"
               ref="userActivePeriodsComponentRef"
               :start-date="chartStartDate"
               :end-date="chartEndDate"
@@ -242,7 +243,7 @@
               :refresh-key="userActivePeriodsRefreshKey"
             />
             <CategoryTrendChart
-              v-show="isCategoryTrend"
+              v-if="isCategoryTrend"
               ref="categoryTrendChartComponentRef"
               :start-date="chartStartDate"
               :end-date="chartEndDate"
@@ -252,7 +253,7 @@
               :refresh-key="categoryTrendRefreshKey"
             />
             <ReviewKeywordsPanel
-              v-show="isReviewKeywords"
+              v-if="isReviewKeywords"
               ref="reviewKeywordsPanelRef"
               :start-date="chartStartDate"
               :end-date="chartEndDate"
@@ -261,7 +262,7 @@
               :refresh-key="reviewKeywordsRefreshKey"
             />
             <DishFeaturesWordCloud
-              v-show="isDishFeaturesCloud"
+              v-if="isDishFeaturesCloud"
               ref="dishFeaturesWordCloudRef"
               :start-date="chartStartDate"
               :end-date="chartEndDate"
@@ -343,9 +344,18 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, onUnmounted, watch } from "vue";
-import { ElMessage } from "element-plus";
-import * as echarts from "echarts";
+import {
+  ref,
+  computed,
+  defineAsyncComponent,
+  defineComponent,
+  h,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  watch,
+} from "vue";
+import { ElMessage, ElSkeleton } from "element-plus";
 import {
   Refresh,
   Money,
@@ -358,12 +368,51 @@ import {
 } from "@element-plus/icons-vue";
 import { statisticsApi } from "@/api/statistics";
 import { orderApi } from "@/api/order";
-import OrdersTrendChart from "@/components/admin/OrdersTrendChart.vue";
-import HotDishRanking from "@/components/admin/HotDishRanking.vue";
-import UserActivePeriods from "@/components/admin/UserActivePeriods.vue";
-import CategoryTrendChart from "@/components/admin/CategoryTrendChart.vue";
-import ReviewKeywordsPanel from "@/components/admin/ReviewKeywordsPanel.vue";
-import DishFeaturesWordCloud from "@/components/admin/DishFeaturesWordCloud.vue";
+
+const ChartLoading = defineComponent({
+  name: "ChartLoading",
+  props: {
+    height: { type: Number, default: 360 },
+  },
+  setup(props) {
+    return () =>
+      h(
+        "div",
+        {
+          class: "chart-async-loading",
+          style: { height: `${props.height}px` },
+        },
+        [h(ElSkeleton, { rows: 6, animated: true })],
+      );
+  },
+});
+
+const createAsyncChart = (loader) =>
+  defineAsyncComponent({
+    loader,
+    loadingComponent: ChartLoading,
+    delay: 120,
+    timeout: 30000,
+  });
+
+const OrdersTrendChart = createAsyncChart(() =>
+  import("@/components/admin/OrdersTrendChart.vue"),
+);
+const HotDishRanking = createAsyncChart(() =>
+  import("@/components/admin/HotDishRanking.vue"),
+);
+const UserActivePeriods = createAsyncChart(() =>
+  import("@/components/admin/UserActivePeriods.vue"),
+);
+const CategoryTrendChart = createAsyncChart(() =>
+  import("@/components/admin/CategoryTrendChart.vue"),
+);
+const ReviewKeywordsPanel = createAsyncChart(() =>
+  import("@/components/admin/ReviewKeywordsPanel.vue"),
+);
+const DishFeaturesWordCloud = createAsyncChart(() =>
+  import("@/components/admin/DishFeaturesWordCloud.vue"),
+);
 
 // 日期范围
 const dateRange = ref([]);
@@ -462,6 +511,9 @@ const lastUpdateTime = ref("");
 
 const revenueTrendChartRef = ref(null);
 let revenueTrendChart = null;
+let echartsModule = null;
+let revenueTrendInitPromise = null;
+let isUnmounted = false;
 const revenueChartShowLabels = ref(true);
 const revenueTrendRawData = ref([]);
 
@@ -587,11 +639,44 @@ const getRevenueTrendBaseOption = () => {
   };
 };
 
-const initRevenueTrendChart = () => {
-  revenueTrendChart = echarts.init(
-    revenueTrendChartRef.value || document.createElement("div"),
-  );
-  revenueTrendChart.setOption(getRevenueTrendBaseOption());
+const loadEcharts = async () => {
+  if (!echartsModule) {
+    echartsModule = await import("echarts");
+  }
+  return echartsModule;
+};
+
+const initRevenueTrendChart = async () => {
+  if (revenueTrendChart) return revenueTrendChart;
+  if (revenueTrendInitPromise) return revenueTrendInitPromise;
+
+  revenueTrendInitPromise = (async () => {
+    await nextTick();
+    if (isUnmounted || !revenueTrendChartRef.value) return null;
+
+    const echarts = await loadEcharts();
+    if (isUnmounted || !revenueTrendChartRef.value) return null;
+
+    revenueTrendChart = echarts.init(revenueTrendChartRef.value);
+    revenueTrendChart.setOption(getRevenueTrendBaseOption());
+    return revenueTrendChart;
+  })().finally(() => {
+    revenueTrendInitPromise = null;
+  });
+
+  return revenueTrendInitPromise;
+};
+
+const ensureRevenueTrendChart = async () => {
+  if (revenueTrendChart) return revenueTrendChart;
+  return initRevenueTrendChart();
+};
+
+const disposeRevenueTrendChart = () => {
+  if (revenueTrendChart) {
+    revenueTrendChart.dispose();
+    revenueTrendChart = null;
+  }
 };
 
 const showRevenueTrendLoading = () => {
@@ -669,6 +754,9 @@ const updateRevenueTrendChart = (rawData) => {
 
 const fetchRevenueTrend = async (timeRange, startDate, endDate) => {
   if (!startDate || !endDate) return;
+  if (isRevenueTrend.value) {
+    await ensureRevenueTrendChart();
+  }
   const key = getRevenueTrendCacheKey(startDate, endDate);
   const cached = revenueTrendCache.get(key);
   if (cached && Date.now() - cached.ts <= REVENUE_TREND_CACHE_TTL_MS) {
@@ -707,9 +795,7 @@ watch(revenueChartShowLabels, () => {
 watch(selectedChartType, async (val) => {
   if (val !== "revenueTrend") return;
   await nextTick();
-  if (!revenueTrendChart && revenueTrendChartRef.value) {
-    initRevenueTrendChart();
-  }
+  await ensureRevenueTrendChart();
   if (revenueTrendChart) {
     revenueTrendChart.resize();
     updateRevenueTrendChart(revenueTrendRawData.value);
@@ -907,7 +993,10 @@ const handleRevenueExportCommand = (command) => {
   };
 
   const url = getActiveChartDataURL();
-  if (!url) return;
+  if (!url) {
+    ElMessage.warning("当前图表尚未加载完成，稍后再试");
+    return;
+  }
 
   if (command === "png") {
     const link = document.createElement("a");
@@ -946,20 +1035,37 @@ const handleRevenueExportCommand = (command) => {
 };
 
 const handleResize = () => {
-  if (revenueTrendChart) revenueTrendChart.resize();
+  if (isRevenueTrend.value && revenueTrendChart) {
+    revenueTrendChart.resize();
+    return;
+  }
+
+  const activeRef = [
+    ordersTrendChartComponentRef,
+    dishSalesRankingComponentRef,
+    userActivePeriodsComponentRef,
+    categoryTrendChartComponentRef,
+    reviewKeywordsPanelRef,
+    dishFeaturesWordCloudRef,
+  ].find((item) => item.value?.resize);
+
+  if (activeRef?.value?.resize) {
+    activeRef.value.resize();
+  }
 };
 
 onMounted(() => {
+  isUnmounted = false;
   initDateRange(); // 初始化日期
-  initRevenueTrendChart();
   loadData();
   fetchSummary();
   window.addEventListener("resize", handleResize);
 });
 
 onUnmounted(() => {
+  isUnmounted = true;
   window.removeEventListener("resize", handleResize);
-  if (revenueTrendChart) revenueTrendChart.dispose();
+  disposeRevenueTrendChart();
 });
 </script>
 
@@ -1012,6 +1118,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.revenue-trend-chart {
+  width: 100%;
+}
+
+.chart-async-loading {
+  display: flex;
+  align-items: center;
+  padding: 24px;
 }
 
 .metric-card {

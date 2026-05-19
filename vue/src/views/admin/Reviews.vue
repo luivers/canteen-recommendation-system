@@ -44,7 +44,6 @@
             <el-option label="正常" value="NORMAL" />
             <el-option label="预警" value="WARNING" />
             <el-option label="隐藏" value="HIDDEN" />
-            <el-option label="垃圾评价" value="SPAM" />
           </el-select>
         </el-form-item>
         <el-form-item label="评价时间">

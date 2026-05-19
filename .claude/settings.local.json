@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(curl -s https://api.github.com/repos/anthropics/skills/contents/skills/pptx/scripts)",
+      "Bash(ls ~/.claude/skills/ 2>&1 || echo \"no skills dir yet\")",
+      "Read(//c/Users/ASUS/.claude/**)",
+      "Bash(rm -rf /tmp/skills-tmp)",
+      "Bash(ls \"D:/skills文件/claude-code-bmad-skills-main/claude-code-bmad-skills-main\")",
+      "Read(//d/skills文件/claude-code-bmad-skills-main/claude-code-bmad-skills-main/**)",
+      "Bash(mkdir -p bmad/agent-overrides docs/stories .claude/commands/bmad)"
+    ],
+    "additionalDirectories": [
+      "\\tmp",
+      "c:\\Users\\ASUS\\Desktop\\毕业设计\\论文\\canteen_recommendation_3.0\\canteen_recommendation_3.0\\.claude\\commands"
     ]
   }
 }

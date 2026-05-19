@@ -161,6 +161,11 @@ public class OrderServiceImpl implements OrderService {
                         newItem.setDish(dish);
                         newItem.setQuantity(item.getQuantity());
                         newItem.setIsGift(false);
+                        newItem.setPickupType(item.getPickupType());
+                        newItem.setPickupTime(item.getPickupTime());
+                        newItem.setRemarks(item.getRemarks());
+                        newItem.setWindowId(dish.getWindowId());
+                        newItem.setWindowName(dish.getWindowName());
 
                         // 分摊价格逻辑
                         BigDecimal unitPrice;

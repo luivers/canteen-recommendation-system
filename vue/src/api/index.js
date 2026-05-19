@@ -1,9 +1,53 @@
 import axios from "axios";
 import { ElMessage } from "element-plus";
 
+export const resolveApiBaseURL = () => {
+  const rawBaseURL = import.meta.env.VITE_API_BASE || "";
+  return rawBaseURL.trim().replace(/\/+$/, "");
+};
+
+export const buildApiUrl = (path, params = {}) => {
+  const baseURL = resolveApiBaseURL();
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url = new URL(`${baseURL}${normalizedPath}`, window.location.origin);
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  return baseURL ? url.toString() : `${url.pathname}${url.search}`;
+};
+
+export const resolveStaticUrl = (path, fallback = "") => {
+  if (!path) return fallback;
+  if (typeof path !== "string") return String(path);
+
+  const value = path.trim();
+  if (!value) return fallback;
+  if (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("data:image") ||
+    value.startsWith("blob:")
+  ) {
+    return value;
+  }
+
+  const baseURL = resolveApiBaseURL();
+  if (value.startsWith("/uploads/")) {
+    return baseURL ? `${baseURL}${value}` : value;
+  }
+  if (value.startsWith("/")) {
+    return value;
+  }
+  return baseURL ? `${baseURL}/uploads/${value}` : `/uploads/${value}`;
+};
+
 // 创建axios实例
 const api = axios.create({
-  baseURL: "http://localhost:8089", // 基础URL，指向8089端口（与后端配置匹配）
+  baseURL: resolveApiBaseURL(),
   timeout: 15000, // 增加超时时间到15秒
   withCredentials: true,
   headers: {

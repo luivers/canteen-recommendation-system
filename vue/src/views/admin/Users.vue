@@ -321,7 +321,7 @@ import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Plus, Download } from "@element-plus/icons-vue";
 import { userApi } from "@/api/user";
-import api from "@/api/index";
+import api, { resolveStaticUrl } from "@/api/index";
 
 const loading = ref(false);
 const dialogVisible = ref(false);
@@ -441,7 +441,6 @@ const groupedTags = computed(() => {
 const userRules = {
   studentId: [
     { required: true, message: "请输入学号", trigger: "blur" },
-    { pattern: /^\d{8,12}$/, message: "学号格式不正确(8-12位数字)", trigger: "blur" },
   ],
   username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
   email: [
@@ -511,15 +510,7 @@ const normalizeStatus = (status) => {
 
 // 获取图片URL
 const getImageUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http") || url.startsWith("/uploads/")) {
-    return url;
-  }
-  // 如果是base64数据，直接返回
-  if (url.startsWith("data:image")) {
-    return url;
-  }
-  return `/uploads/${url}`;
+  return resolveStaticUrl(url);
 };
 
 // 获取状态类型搜索用户

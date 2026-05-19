@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a0802ad3-249d-4735-9c2c-1c78c80d74c3" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="197" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;luivers&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/luivers/coupon_manager.git&quot;,
+    &quot;accountId&quot;: &quot;9c2d9aa4-21ca-488a-bd5f-8e110b6d566f&quot;
+  }
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="2zrBpUikq9om8qSceuJDU2fFup2" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;找到数据库连接形参&quot;,
+    &quot;Notification.DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.CanteenOrderingApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.CanteenRecommendationApplication.executor&quot;: &quot;Run&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/毕业设计-杨/canteen_recommendation_2.0(1)/canteen_recommendation_2.0/java&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/ASUS/IdeaProjects/untitled1/src/Main.java&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;项目&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;通义灵码&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;D:\\java\\IntelliJ IDEA 2025.1.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
+    ]
+  }
+}</component>
+  <component name="RunManager" selected="Spring Boot.CanteenOrderingApplication">
+    <configuration name="CanteenOrderingApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="canteen-recommendation" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.school.canteen.CanteenOrderingApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CanteenRecommendationApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="canteen-recommendation" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.school.canteen.CanteenRecommendationApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-26cb7f24e5b0-intellij.indexing.shared.core-IU-253.29346.138" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.29346.138" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a0802ad3-249d-4735-9c2c-1c78c80d74c3" name="Changes" comment="" />
+      <created>1752479495404</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1752479495404</updated>
+      <workItem from="1752479496874" duration="36000" />
+      <workItem from="1752479540058" duration="69000" />
+      <workItem from="1752479617350" duration="28000" />
+      <workItem from="1752479655681" duration="18000" />
+      <workItem from="1752479681482" duration="23000" />
+      <workItem from="1752479728549" duration="49000" />
+      <workItem from="1756280506580" duration="6000" />
+      <workItem from="1762482809676" duration="371000" />
+      <workItem from="1762483261374" duration="30000" />
+      <workItem from="1762489989824" duration="599000" />
+      <workItem from="1762751602013" duration="122000" />
+      <workItem from="1763010856317" duration="598000" />
+      <workItem from="1763011862913" duration="110000" />
+      <workItem from="1763020614814" duration="4575000" />
+      <workItem from="1763025305576" duration="65000" />
+      <workItem from="1763025381452" duration="16000" />
+      <workItem from="1763025462511" duration="10000" />
+      <workItem from="1763025482971" duration="58000" />
+      <workItem from="1763025551573" duration="47000" />
+      <workItem from="1763025614578" duration="18000" />
+      <workItem from="1763025723019" duration="61000" />
+      <workItem from="1763025892275" duration="160000" />
+      <workItem from="1763026070353" duration="97000" />
+      <workItem from="1763026177733" duration="94000" />
+      <workItem from="1763026295683" duration="59000" />
+      <workItem from="1763026382424" duration="1422000" />
+      <workItem from="1763027836675" duration="270000" />
+      <workItem from="1763084938262" duration="5020000" />
+      <workItem from="1763090399353" duration="9000" />
+      <workItem from="1763091955352" duration="91000" />
+      <workItem from="1763099059535" duration="49000" />
+      <workItem from="1763113828112" duration="77000" />
+      <workItem from="1763973172136" duration="187000" />
+      <workItem from="1763973385421" duration="39000" />
+      <workItem from="1763973481253" duration="407000" />
+      <workItem from="1763973967135" duration="1829000" />
+      <workItem from="1764742069410" duration="72000" />
+      <workItem from="1764742154989" duration="7000" />
+      <workItem from="1764742234454" duration="169000" />
+      <workItem from="1765335563253" duration="73000" />
+      <workItem from="1765340653912" duration="802000" />
+      <workItem from="1766987864692" duration="63000" />
+      <workItem from="1768287887179" duration="192000" />
+      <workItem from="1769939419297" duration="220000" />
+      <workItem from="1774443024859" duration="448000" />
+      <workItem from="1774443655961" duration="17000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

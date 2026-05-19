@@ -704,6 +704,8 @@ public class OrderController {
                         
                         // 数量：每个拆分项的数量都等于套餐的购买数量，直接取其一即可
                         itemMap.put("quantity", item.getQuantity());
+                        itemMap.put("pickupType", item.getPickupType() != null ? item.getPickupType().name() : null);
+                        itemMap.put("pickupTime", item.getPickupTime());
                         
                         // 小计：quantity * comboPrice
                         BigDecimal subtotal = BigDecimal.valueOf(combo.getPrice()).multiply(new BigDecimal(item.getQuantity()));
@@ -741,6 +743,8 @@ public class OrderController {
                     itemMap.put("quantity", item.getQuantity());
                     itemMap.put("unitPrice", item.getUnitPrice());
                     itemMap.put("subtotal", item.getSubtotal());
+                    itemMap.put("pickupType", item.getPickupType() != null ? item.getPickupType().name() : null);
+                    itemMap.put("pickupTime", item.getPickupTime());
 
                     itemsList.add(itemMap);
                 }

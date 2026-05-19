@@ -135,10 +135,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { notificationApi } from "@/api/notification";
+import { useUserStore } from "@/stores/user";
+import { resolveStaticUrl } from "@/api";
 import dayjs from "dayjs";
 import {
   DataAnalysis,
@@ -160,10 +162,9 @@ import {
 
 const router = useRouter();
 const route = useRoute();
+const userStore = useUserStore();
 
 // 响应式数据
-const userAvatar = ref("");
-const userName = ref("");
 const unreadCount = ref(0);
 const hasUnread = computed(() => unreadCount.value > 0);
 const notificationDrawerVisible = ref(false);
@@ -171,8 +172,19 @@ const notifications = ref([]);
 const notificationLoading = ref(false);
 
 const isWindowManager = computed(() => {
-  const role = localStorage.getItem("userRole");
-  return role === "WINDOW_MANAGER";
+  return userStore.isManager;
+});
+
+const resolveAvatar = (avatar) => resolveStaticUrl(avatar, "/default-avatar.png");
+
+const userAvatar = computed(() => resolveAvatar(userStore.userInfo?.avatar));
+const userName = computed(() => {
+  return (
+    userStore.userInfo?.name ||
+    userStore.userInfo?.username ||
+    userStore.userInfo?.nickname ||
+    "管理员"
+  );
 });
 
 // 计算属性
@@ -259,10 +271,7 @@ const markAllRead = async () => {
 
 // 更新用户信息
 const updateUserInfo = () => {
-  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-  userAvatar.value = userInfo.avatar || "/default-avatar.png";
-  userName.value =
-    userInfo.name || userInfo.username || userInfo.nickname || "管理员";
+  userStore.checkLoginStatus();
 };
 
 // 菜单选择处理
@@ -295,10 +304,7 @@ const handleLogout = async () => {
       type: "warning",
     });
 
-    // 清除本地存储
-    localStorage.removeItem("token");
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("userRole");
+    userStore.logout();
 
     // 跳转到登录页
     router.push("/login");
@@ -320,7 +326,6 @@ onMounted(() => {
 });
 
 // 组件卸载时清除定时器
-import { onUnmounted } from "vue";
 onUnmounted(() => {
   if (pollTimer) {
     clearInterval(pollTimer);
