@@ -715,7 +715,7 @@ public class OrderServiceImpl implements OrderService {
         Order.OrderStatus from = order.getStatus();
         if (order.getStatus() == Order.OrderStatus.PAID || order.getStatus() == Order.OrderStatus.PREPARING
                 || order.getStatus() == Order.OrderStatus.READY || order.getStatus() == Order.OrderStatus.COMPLETED) {
-            // 已支付或后续状态，直接返回（幂等）
+            ensurePaidOrderPaymentMatches(order, paymentMethod, transactionId);
             return order;
         }
         order.setStatus(Order.OrderStatus.PAID);
@@ -759,6 +759,32 @@ public class OrderServiceImpl implements OrderService {
         // 推送实时事件
         orderEventService.publishOrderUpdate(saved);
         return saved;
+    }
+
+    private void ensurePaidOrderPaymentMatches(Order order, String paymentMethod, String transactionId) {
+        if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
+            return;
+        }
+        String incomingMethod = normalizePaymentValue(paymentMethod);
+        String incomingTransactionId = normalizePaymentValue(transactionId);
+        for (OrderItem item : order.getOrderItems()) {
+            String existingMethod = normalizePaymentValue(item.getPaymentMethod());
+            String existingTransactionId = normalizePaymentValue(item.getPaymentTransactionId());
+            if (existingTransactionId != null && incomingTransactionId != null && !Objects.equals(existingTransactionId, incomingTransactionId)) {
+                throw new BusinessException("PAYMENT_CONFLICT", HttpStatus.CONFLICT, "Order already paid with another transaction");
+            }
+            if (existingMethod != null && incomingMethod != null && !Objects.equals(existingMethod, incomingMethod)) {
+                throw new BusinessException("PAYMENT_CONFLICT", HttpStatus.CONFLICT, "Order already paid with another payment method");
+            }
+        }
+    }
+
+    private String normalizePaymentValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() || "null".equalsIgnoreCase(trimmed) ? null : trimmed;
     }
     
     @Override

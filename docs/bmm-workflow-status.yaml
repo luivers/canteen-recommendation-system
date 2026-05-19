@@ -46,9 +46,10 @@ phases:
     stories:
       status: "required"
       total: 24
-      completed: 1
+      completed: 8
+      ready_for_dev: 1
       in_progress: 0
-      pending: 23
+      pending: 15
 
 current_phase: "phase_4_execution"
-next_recommended_workflow: "/bmad:dev-story"
+next_recommended_workflow: "/bmad:create-story"

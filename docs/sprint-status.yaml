@@ -18,10 +18,10 @@ goals:
 
 story_summary:
   total: 24
-  completed: 5
+  completed: 8
   ready_for_dev: 1
   in_progress: 0
-  pending: 18
+  pending: 15
 
 stories:
   - id: "ST-001"
@@ -89,21 +89,30 @@ stories:
     priority: "Must"
     estimate: 5
     planned_day: "D3"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-007-payment-facade-provider-mock.md"
+    created_at: "2026-05-19"
+    completed_at: "2026-05-20"
   - id: "ST-008"
     title: "支付创建接口返回二维码 / 跳转 / 小程序参数占位"
     epic: "EPIC-004"
     priority: "Must"
     estimate: 3
     planned_day: "D3"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-008-payment-create-qr-redirect-miniapp-params.md"
+    created_at: "2026-05-20"
+    completed_at: "2026-05-20"
   - id: "ST-009"
     title: "支付回调验签、幂等处理、订单置为 PAID 并推送 SSE"
     epic: "EPIC-004"
     priority: "Must"
     estimate: 5
     planned_day: "D3"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-009-payment-callback-idempotent-paid-sse.md"
+    created_at: "2026-05-20"
+    completed_at: "2026-05-20"
   - id: "ST-010"
     title: "支付状态查询与前端支付结果页 / 弹窗"
     epic: "EPIC-004"
@@ -210,5 +219,5 @@ stories:
     planned_day: "D7"
     status: "pending"
 
-next_recommended_workflow: "/bmad:dev-story"
-next_story: "ST-002"
+next_recommended_workflow: "/bmad:create-story"
+next_story: "ST-010"

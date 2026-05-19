@@ -833,24 +833,41 @@ const handleCurrentChange = (page) => {
 // 支付订单
 const payOrder = (order) => {
   payingOrder.value = order;
-  selectedPaymentMethod.value = 'WECHAT';
+  selectedPaymentMethod.value = "WECHAT";
   paymentDialogVisible.value = true;
+};
+
+const unwrapApiPayload = (response) => response?.data?.data ?? response?.data ?? response;
+
+const buildMockCompletionPayload = (paymentCreateResult) => {
+  if (!paymentCreateResult?.transactionId) {
+    throw new Error("Payment transaction id is required");
+  }
+  return {
+    paymentMethod: paymentCreateResult.paymentMethod || selectedPaymentMethod.value,
+    transactionId: paymentCreateResult.transactionId,
+    paidAt: new Date().toISOString(),
+  };
 };
 
 // 确认支付
 const confirmPayment = async () => {
   if (!payingOrder.value) return;
   paying.value = true;
+  let paymentCreateResult = null;
   try {
-    const payload = {
+    const createRes = await orderApi.createPayment(payingOrder.value.id, {
       paymentMethod: selectedPaymentMethod.value,
-      transactionId: "TX" + Date.now(),
-      paidAt: new Date().toISOString(),
-    };
-    const res = await orderApi.markPaid(payingOrder.value.id, payload);
+    });
+    paymentCreateResult = unwrapApiPayload(createRes);
+    const res = await orderApi.markPaid(
+      payingOrder.value.id,
+      buildMockCompletionPayload(paymentCreateResult),
+    );
+    const completedPayment = unwrapApiPayload(res);
     paymentBanner.value = {
       visible: true,
-      text: `订单号 ${res.data.orderNumber} 已支付成功`,
+      text: `订单号 ${completedPayment.orderNumber} 已支付成功`,
     };
     paymentDialogVisible.value = false;
     await loadOrders();
@@ -867,12 +884,16 @@ const confirmPayment = async () => {
     for (let i = 0; i < 2; i++) {
       try {
         await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
-        const payload = {
-          paymentMethod: selectedPaymentMethod.value,
-          transactionId: "TX" + Date.now(),
-          paidAt: new Date().toISOString(),
-        };
-        await orderApi.markPaid(payingOrder.value.id, payload);
+        if (!paymentCreateResult?.transactionId) {
+          const retryCreateRes = await orderApi.createPayment(payingOrder.value.id, {
+            paymentMethod: selectedPaymentMethod.value,
+          });
+          paymentCreateResult = unwrapApiPayload(retryCreateRes);
+        }
+        await orderApi.markPaid(
+          payingOrder.value.id,
+          buildMockCompletionPayload(paymentCreateResult),
+        );
         paymentBanner.value = {
           visible: true,
           text: `订单号 ${payingOrder.value.orderNumber} 支付成功（重试）`,

@@ -47,8 +47,13 @@ jwt:
   expiration: ${JWT_EXPIRATION:86400000}
 
 payment:
+  mode: ${PAYMENT_MODE:mock}
   callback-secret: ${PAYMENT_CALLBACK_SECRET:}
   callback-timeout-seconds: ${PAYMENT_CALLBACK_TIMEOUT_SECONDS:300}
+  mock:
+    enabled: ${PAYMENT_MOCK_ENABLED:true}
+    qr-code-url: ${PAYMENT_MOCK_QR_CODE_URL:mock://canteen-payment}
+    redirect-url: ${PAYMENT_MOCK_REDIRECT_URL:}
 
 file:
   # 默认使用本项目下的 uploads；也可通过环境变量 FILE_UPLOAD_DIR 覆盖

@@ -118,6 +118,10 @@ export const orderApi = {
     return api.post(`/api/payments/orders/${orderId}/success`, payload);
   },
 
+  createPayment: (orderId, payload) => {
+    return api.post(`/api/payments/orders/${orderId}/create`, payload);
+  },
+
   getCart: () => {
     return api.get("/api/orders/cart");
   },
