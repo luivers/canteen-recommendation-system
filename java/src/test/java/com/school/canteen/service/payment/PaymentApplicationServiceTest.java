@@ -10,6 +10,7 @@ import com.school.canteen.service.OrderService;
 import com.school.canteen.service.payment.config.PaymentProperties;
 import com.school.canteen.service.payment.dto.PaymentCompletionResponse;
 import com.school.canteen.service.payment.dto.PaymentCreateResponse;
+import com.school.canteen.service.payment.dto.PaymentQueryResponse;
 import com.school.canteen.service.payment.enums.PaymentStatus;
 import com.school.canteen.service.payment.provider.MockPaymentProvider;
 import org.junit.jupiter.api.Test;
@@ -148,6 +149,102 @@ class PaymentApplicationServiceTest {
             BusinessException.class,
             () -> service.createPayment(24L, "WECHAT", user)
         );
+        assertEquals("PAYMENT_PROVIDER_NOT_IMPLEMENTED", exception.getCode());
+        assertTrue(exception.getMessage().contains("WECHAT_SANDBOX"));
+    }
+
+    @Test
+    void queryPaymentStatusReturnsPendingMockStatusForAccessibleOrder() {
+        PaymentProperties properties = new PaymentProperties();
+        PaymentProviderFactory factory = new PaymentProviderFactory(properties, List.of(new MockPaymentProvider(properties)));
+        OrderService orderService = mock(OrderService.class);
+        PaymentApplicationService service = new PaymentApplicationService(orderService, factory, properties, emptyCallbackRepository());
+        User user = user(7L, User.UserRole.STUDENT);
+        Order pending = order(25L, "ORD2006", user, Order.OrderStatus.PENDING);
+        when(orderService.getOrderById(25L)).thenReturn(pending);
+
+        PaymentQueryResponse response = service.queryPaymentStatus(25L, user);
+
+        assertEquals("mock", response.getMode());
+        assertEquals("MOCK", response.getProvider());
+        assertEquals(25L, response.getOrderId());
+        assertEquals("ORD2006", response.getOrderNumber());
+        assertEquals("WECHAT", response.getPaymentMethod());
+        assertEquals("PENDING", response.getLocalStatus());
+        assertEquals(PaymentStatus.PENDING, response.getProviderStatus());
+        assertTrue(response.getQueryTime() != null);
+    }
+
+    @Test
+    void queryPaymentStatusReturnsPaidMockStatusWithPaymentFields() {
+        PaymentProperties properties = new PaymentProperties();
+        PaymentProviderFactory factory = new PaymentProviderFactory(properties, List.of(new MockPaymentProvider(properties)));
+        OrderService orderService = mock(OrderService.class);
+        PaymentApplicationService service = new PaymentApplicationService(orderService, factory, properties, emptyCallbackRepository());
+        User user = user(7L, User.UserRole.STUDENT);
+        Order paid = paidOrder("ORD2007", "ALIPAY", "MOCK-ORD2007-1");
+        paid.setId(26L);
+        when(orderService.getOrderById(26L)).thenReturn(paid);
+
+        PaymentQueryResponse response = service.queryPaymentStatus(26L, user);
+
+        assertEquals("PAID", response.getLocalStatus());
+        assertEquals(PaymentStatus.PAID, response.getProviderStatus());
+        assertEquals("ALIPAY", response.getPaymentMethod());
+        assertEquals("MOCK-ORD2007-1", response.getTransactionId());
+        assertTrue(response.getPaymentTime() != null);
+    }
+
+    @Test
+    void queryPaymentStatusRejectsUnauthenticatedAndUnauthorizedUsers() {
+        PaymentProperties properties = new PaymentProperties();
+        PaymentProviderFactory factory = new PaymentProviderFactory(properties, List.of(new MockPaymentProvider(properties)));
+        OrderService orderService = mock(OrderService.class);
+        PaymentApplicationService service = new PaymentApplicationService(orderService, factory, properties, emptyCallbackRepository());
+        when(orderService.getOrderById(27L)).thenReturn(order(27L, "ORD2008", user(99L, User.UserRole.STUDENT), Order.OrderStatus.PENDING));
+
+        BusinessException unauthenticated = assertThrows(
+            BusinessException.class,
+            () -> service.queryPaymentStatus(27L, null)
+        );
+        assertEquals("UNAUTHORIZED", unauthenticated.getCode());
+
+        BusinessException forbidden = assertThrows(
+            BusinessException.class,
+            () -> service.queryPaymentStatus(27L, user(7L, User.UserRole.STUDENT))
+        );
+        assertEquals("FORBIDDEN", forbidden.getCode());
+    }
+
+    @Test
+    void queryPaymentStatusAllowsAdminAccessToOtherUsersOrder() {
+        PaymentProperties properties = new PaymentProperties();
+        PaymentProviderFactory factory = new PaymentProviderFactory(properties, List.of(new MockPaymentProvider(properties)));
+        OrderService orderService = mock(OrderService.class);
+        PaymentApplicationService service = new PaymentApplicationService(orderService, factory, properties, emptyCallbackRepository());
+        when(orderService.getOrderById(28L)).thenReturn(order(28L, "ORD2009", user(99L, User.UserRole.STUDENT), Order.OrderStatus.PENDING));
+
+        PaymentQueryResponse response = service.queryPaymentStatus(28L, user(1L, User.UserRole.ADMIN));
+
+        assertEquals(28L, response.getOrderId());
+        assertEquals("PENDING", response.getLocalStatus());
+    }
+
+    @Test
+    void queryPaymentStatusFailsClearlyWhenSandboxProviderIsNotImplemented() {
+        PaymentProperties properties = new PaymentProperties();
+        properties.setMode("sandbox");
+        PaymentProviderFactory factory = new PaymentProviderFactory(properties, List.of(new MockPaymentProvider(properties)));
+        OrderService orderService = mock(OrderService.class);
+        PaymentApplicationService service = new PaymentApplicationService(orderService, factory, properties, emptyCallbackRepository());
+        User user = user(7L, User.UserRole.STUDENT);
+        when(orderService.getOrderById(29L)).thenReturn(order(29L, "ORD2010", user, Order.OrderStatus.PENDING));
+
+        BusinessException exception = assertThrows(
+            BusinessException.class,
+            () -> service.queryPaymentStatus(29L, user)
+        );
+
         assertEquals("PAYMENT_PROVIDER_NOT_IMPLEMENTED", exception.getCode());
         assertTrue(exception.getMessage().contains("WECHAT_SANDBOX"));
     }

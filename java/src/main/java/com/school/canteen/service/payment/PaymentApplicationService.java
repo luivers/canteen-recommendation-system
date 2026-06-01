@@ -187,10 +187,25 @@ public class PaymentApplicationService {
         providerResponse.setTransactionId(firstItem != null ? firstItem.getPaymentTransactionId() : null);
         providerResponse.setLocalStatus(order.getStatus() != null ? order.getStatus().name() : null);
         providerResponse.setPaymentTime(firstItem != null ? firstItem.getPaymentTime() : null);
+        providerResponse.setQueryTime(LocalDateTime.now());
         if (providerResponse.getProviderStatus() == null) {
             providerResponse.setProviderStatus(PaymentStatus.UNKNOWN);
         }
+        if ("mock".equalsIgnoreCase(properties.getMode()) || "MOCK".equals(providerResponse.getProvider())) {
+            providerResponse.setProviderStatus(resolveMockProviderStatus(order, providerResponse.getProviderStatus()));
+        }
         return providerResponse;
+    }
+
+    private PaymentStatus resolveMockProviderStatus(Order order, PaymentStatus fallback) {
+        if (order.getStatus() == null) {
+            return fallback != null ? fallback : PaymentStatus.UNKNOWN;
+        }
+        return switch (order.getStatus()) {
+            case PAID, PREPARING, READY, COMPLETED -> PaymentStatus.PAID;
+            case PENDING -> PaymentStatus.PENDING;
+            case CANCELLED -> PaymentStatus.CANCELLED;
+        };
     }
 
     private Order loadAccessibleOrder(Long orderId, User currentUser) {

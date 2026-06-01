@@ -23,5 +23,6 @@ public class PaymentQueryResponse {
     private PaymentStatus providerStatus;
     private String localStatus;
     private LocalDateTime paymentTime;
+    private LocalDateTime queryTime;
     private Map<String, Object> rawProviderResponse;
 }

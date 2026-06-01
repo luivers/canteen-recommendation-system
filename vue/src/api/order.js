@@ -122,6 +122,10 @@ export const orderApi = {
     return api.post(`/api/payments/orders/${orderId}/create`, payload);
   },
 
+  queryPaymentStatus: (orderId) => {
+    return api.get(`/api/payments/orders/${orderId}/status`);
+  },
+
   getCart: () => {
     return api.get("/api/orders/cart");
   },

@@ -540,11 +540,12 @@
     <!-- 支付方式选择对话框 -->
     <el-dialog
       v-model="paymentDialogVisible"
-      title="选择支付方式"
-      width="400px"
+      :title="paymentResult ? '支付结果' : '选择支付方式'"
+      width="560px"
       append-to-body
+      @closed="handlePaymentDialogClosed"
     >
-      <div class="payment-methods">
+      <div v-if="!paymentResult" class="payment-methods">
         <div
           class="payment-method-item"
           :class="{ active: selectedPaymentMethod === 'WECHAT' }"
@@ -573,11 +574,78 @@
           <el-icon v-if="selectedPaymentMethod === 'CARD'" class="check-icon"><Select /></el-icon>
         </div>
       </div>
+      <div v-else class="payment-result-panel" v-loading="paymentStatusLoading">
+        <div class="payment-result-header">
+          <el-tag :type="getPaymentResultTagType(paymentStatus)" size="large">
+            {{ getPaymentDisplayStatus(paymentStatus) }}
+          </el-tag>
+          <span class="payment-result-mode">
+            {{ paymentResult.provider || paymentStatus?.provider || 'MOCK' }} / {{ paymentResult.mode || paymentStatus?.mode || 'mock' }}
+          </span>
+        </div>
+        <div class="payment-result-grid">
+          <div class="payment-result-item">
+            <span>订单号</span>
+            <strong>{{ paymentResult.orderNumber || payingOrder?.orderNumber }}</strong>
+          </div>
+          <div class="payment-result-item">
+            <span>应付金额</span>
+            <strong>¥{{ (paymentResult.amount ?? payingOrder?.payableAmount ?? payingOrder?.totalAmount ?? 0).toFixed(2) }}</strong>
+          </div>
+          <div class="payment-result-item">
+            <span>支付方式</span>
+            <strong>{{ getPaymentMethodText(paymentResult.paymentMethod || selectedPaymentMethod) }}</strong>
+          </div>
+          <div class="payment-result-item">
+            <span>交易号</span>
+            <strong>{{ paymentStatus?.transactionId || paymentResult.transactionId || '-' }}</strong>
+          </div>
+          <div class="payment-result-item">
+            <span>本地状态</span>
+            <strong>{{ getStatusText(paymentStatus?.localStatus || payingOrder?.status) }}</strong>
+          </div>
+          <div class="payment-result-item">
+            <span>渠道状态</span>
+            <strong>{{ getProviderStatusText(paymentStatus?.providerStatus || paymentResult.status) }}</strong>
+          </div>
+        </div>
+        <div v-if="paymentResult.qrCodeUrl" class="payment-result-block">
+          <span>二维码占位</span>
+          <code>{{ paymentResult.qrCodeUrl }}</code>
+        </div>
+        <div v-if="paymentResult.redirectUrl" class="payment-result-block">
+          <span>跳转链接</span>
+          <el-link :href="paymentResult.redirectUrl" type="primary" target="_blank">
+            {{ paymentResult.redirectUrl }}
+          </el-link>
+        </div>
+        <div v-if="paymentResult.miniProgramParams" class="payment-result-block">
+          <span>小程序参数</span>
+          <code>{{ formatMiniProgramParams(paymentResult.miniProgramParams) }}</code>
+        </div>
+        <el-alert
+          v-if="paymentStatusMessage"
+          class="payment-result-alert"
+          :title="paymentStatusMessage"
+          :type="isPaymentSettled(paymentStatus) ? 'success' : 'warning'"
+          show-icon
+          :closable="false"
+        />
+      </div>
       <template #footer>
-        <el-button @click="paymentDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmPayment" :loading="paying">
+        <template v-if="!paymentResult">
+          <el-button @click="paymentDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmPayment" :loading="paying">
           确认支付 ¥{{ (payingOrder?.payableAmount ?? payingOrder?.totalAmount ?? 0).toFixed(2) }}
-        </el-button>
+          </el-button>
+        </template>
+        <template v-else>
+          <el-button @click="paymentDialogVisible = false">关闭</el-button>
+          <el-button @click="refreshPaymentStatus()" :loading="paymentStatusLoading">
+            刷新状态
+          </el-button>
+          <el-button type="primary" @click="loadOrders">返回订单列表</el-button>
+        </template>
       </template>
     </el-dialog>
   </div>
@@ -627,9 +695,17 @@ const customTag = ref("");
 
 // 支付相关
 const paymentDialogVisible = ref(false);
-const selectedPaymentMethod = ref('WECHAT');
+const selectedPaymentMethod = ref("WECHAT");
 const payingOrder = ref(null);
 const paying = ref(false);
+const paymentResult = ref(null);
+const paymentStatus = ref(null);
+const paymentStatusLoading = ref(false);
+const paymentStatusMessage = ref("");
+let paymentStatusTimer = null;
+let paymentStatusAttempts = 0;
+const PAYMENT_STATUS_MAX_ATTEMPTS = 5;
+const PAYMENT_STATUS_INTERVAL_MS = 3000;
 
 // 评价表单
 const reviewForm = reactive({
@@ -832,8 +908,12 @@ const handleCurrentChange = (page) => {
 
 // 支付订单
 const payOrder = (order) => {
+  stopPaymentStatusPolling();
   payingOrder.value = order;
   selectedPaymentMethod.value = "WECHAT";
+  paymentResult.value = null;
+  paymentStatus.value = null;
+  paymentStatusMessage.value = "";
   paymentDialogVisible.value = true;
 };
 
@@ -850,68 +930,202 @@ const buildMockCompletionPayload = (paymentCreateResult) => {
   };
 };
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const extractApiErrorMessage = (error) => {
+  return (
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message ||
+    "请求失败"
+  );
+};
+
+const isPaymentSettled = (statusPayload) => {
+  const localStatus = statusPayload?.localStatus || statusPayload?.status;
+  return ["PAID", "PREPARING", "READY", "COMPLETED"].includes(localStatus);
+};
+
+const getPaymentDisplayStatus = (statusPayload) => {
+  if (!statusPayload) return "等待确认";
+  if (isPaymentSettled(statusPayload)) return "支付成功";
+  if (statusPayload.providerStatus === "FAILED") return "支付失败";
+  if (statusPayload.providerStatus === "CANCELLED") return "支付取消";
+  if (statusPayload.localStatus === "PENDING") return "等待支付";
+  return "状态确认中";
+};
+
+const getPaymentResultTagType = (statusPayload) => {
+  if (isPaymentSettled(statusPayload)) return "success";
+  if (["FAILED", "CANCELLED"].includes(statusPayload?.providerStatus)) return "danger";
+  return "warning";
+};
+
+const getProviderStatusText = (status) => {
+  const texts = {
+    CREATED: "已创建",
+    PENDING: "待支付",
+    PAID: "已支付",
+    FAILED: "失败",
+    CANCELLED: "已取消",
+    UNKNOWN: "未知",
+  };
+  return texts[status] || status || "未知";
+};
+
+const formatMiniProgramParams = (params) => {
+  try {
+    return JSON.stringify(params);
+  } catch (e) {
+    return String(params);
+  }
+};
+
+const applyPaymentStatusToOrder = (statusPayload) => {
+  if (!statusPayload?.orderId) return;
+  const idx = orders.value.findIndex((o) => o.id === statusPayload.orderId);
+  const paymentFields = {
+    paymentMethod: statusPayload.paymentMethod,
+    paymentTransactionId: statusPayload.transactionId,
+    paymentTime: statusPayload.paymentTime,
+  };
+  if (idx !== -1) {
+    orders.value[idx] = {
+      ...orders.value[idx],
+      status: statusPayload.localStatus || orders.value[idx].status,
+      ...paymentFields,
+    };
+  }
+  if (payingOrder.value?.id === statusPayload.orderId) {
+    payingOrder.value = {
+      ...payingOrder.value,
+      status: statusPayload.localStatus || payingOrder.value.status,
+      ...paymentFields,
+    };
+  }
+};
+
+const applyCompletionToPaymentStatus = (completedPayment) => {
+  const statusPayload = {
+    ...completedPayment,
+    localStatus: completedPayment.status,
+    providerStatus: completedPayment.status === "PAID" ? "PAID" : "UNKNOWN",
+    queryTime: new Date().toISOString(),
+  };
+  paymentStatus.value = statusPayload;
+  applyPaymentStatusToOrder(statusPayload);
+};
+
+const stopPaymentStatusPolling = () => {
+  if (paymentStatusTimer) {
+    clearTimeout(paymentStatusTimer);
+    paymentStatusTimer = null;
+  }
+  paymentStatusAttempts = 0;
+};
+
+const schedulePaymentStatusPolling = () => {
+  if (!paymentDialogVisible.value || !payingOrder.value) return;
+  if (paymentStatusAttempts >= PAYMENT_STATUS_MAX_ATTEMPTS) {
+    paymentStatusMessage.value = "支付结果暂未同步，请手动刷新状态或稍后查看订单";
+    return;
+  }
+  if (paymentStatusTimer) clearTimeout(paymentStatusTimer);
+  paymentStatusTimer = setTimeout(async () => {
+    paymentStatusTimer = null;
+    paymentStatusAttempts += 1;
+    const settled = await refreshPaymentStatus({ silent: true });
+    if (!settled) schedulePaymentStatusPolling();
+  }, PAYMENT_STATUS_INTERVAL_MS);
+};
+
+const refreshPaymentStatus = async ({ silent = false } = {}) => {
+  if (!payingOrder.value?.id) return false;
+  try {
+    if (!silent) paymentStatusLoading.value = true;
+    const response = await orderApi.queryPaymentStatus(payingOrder.value.id);
+    const statusPayload = unwrapApiPayload(response);
+    paymentStatus.value = statusPayload;
+    applyPaymentStatusToOrder(statusPayload);
+    if (isPaymentSettled(statusPayload)) {
+      stopPaymentStatusPolling();
+      paymentStatusMessage.value = `订单号 ${statusPayload.orderNumber} 已支付成功`;
+      paymentBanner.value = {
+        visible: true,
+        text: paymentStatusMessage.value,
+      };
+      return true;
+    }
+    paymentStatusMessage.value = "支付仍在处理中，可稍后刷新状态";
+    return false;
+  } catch (error) {
+    paymentStatusMessage.value = extractApiErrorMessage(error);
+    if (!silent) ElMessage.error(paymentStatusMessage.value);
+    return false;
+  } finally {
+    if (!silent) paymentStatusLoading.value = false;
+  }
+};
+
+const completeMockPaymentWithRetry = async (paymentCreateResult) => {
+  let lastError = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const res = await orderApi.markPaid(
+        payingOrder.value.id,
+        buildMockCompletionPayload(paymentCreateResult),
+      );
+      return unwrapApiPayload(res);
+    } catch (error) {
+      lastError = error;
+      if (attempt < 2) await delay(1000 * (attempt + 1));
+    }
+  }
+  throw lastError;
+};
+
 // 确认支付
 const confirmPayment = async () => {
   if (!payingOrder.value) return;
   paying.value = true;
-  let paymentCreateResult = null;
   try {
     const createRes = await orderApi.createPayment(payingOrder.value.id, {
       paymentMethod: selectedPaymentMethod.value,
     });
-    paymentCreateResult = unwrapApiPayload(createRes);
-    const res = await orderApi.markPaid(
-      payingOrder.value.id,
-      buildMockCompletionPayload(paymentCreateResult),
-    );
-    const completedPayment = unwrapApiPayload(res);
-    paymentBanner.value = {
-      visible: true,
-      text: `订单号 ${completedPayment.orderNumber} 已支付成功`,
+    paymentResult.value = unwrapApiPayload(createRes);
+    paymentStatus.value = {
+      ...paymentResult.value,
+      localStatus: payingOrder.value.status,
+      providerStatus: paymentResult.value.status,
+      queryTime: new Date().toISOString(),
     };
-    paymentDialogVisible.value = false;
+    paymentStatusMessage.value = "支付参数已创建，正在确认支付结果";
+    const completedPayment = await completeMockPaymentWithRetry(paymentResult.value);
+    applyCompletionToPaymentStatus(completedPayment);
     await loadOrders();
-    const updated = orders.value.find((o) => o.id === payingOrder.value.id);
-    if (!updated || updated.status !== "PAID") {
-      supportBanner.value = {
-        visible: true,
-        text: `订单号 ${payingOrder.value.orderNumber} 支付成功，但页面未同步，请手动刷新或联系客服：400-800-1234`,
-        contact: "4008001234",
-      };
-    }
+    const settled = await refreshPaymentStatus({ silent: true });
+    if (!settled) schedulePaymentStatusPolling();
   } catch (error) {
-    ElMessage.error("支付失败，正在重试...");
-    for (let i = 0; i < 2; i++) {
-      try {
-        await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
-        if (!paymentCreateResult?.transactionId) {
-          const retryCreateRes = await orderApi.createPayment(payingOrder.value.id, {
-            paymentMethod: selectedPaymentMethod.value,
-          });
-          paymentCreateResult = unwrapApiPayload(retryCreateRes);
-        }
-        await orderApi.markPaid(
-          payingOrder.value.id,
-          buildMockCompletionPayload(paymentCreateResult),
-        );
-        paymentBanner.value = {
-          visible: true,
-          text: `订单号 ${payingOrder.value.orderNumber} 支付成功（重试）`,
-        };
-        paymentDialogVisible.value = false;
-        await loadOrders();
-        return;
-      } catch (e) {}
-    }
-    ElMessage.error("支付失败，请手动刷新或联系客服");
+    const message = extractApiErrorMessage(error);
+    paymentStatusMessage.value = message;
+    ElMessage.error(message);
     supportBanner.value = {
       visible: true,
       text: "支付失败或未同步，请手动刷新或联系客服：400-800-1234",
       contact: "4008001234",
     };
+    if (paymentResult.value) schedulePaymentStatusPolling();
   } finally {
     paying.value = false;
   }
+};
+
+const handlePaymentDialogClosed = () => {
+  stopPaymentStatusPolling();
+  paymentResult.value = null;
+  paymentStatus.value = null;
+  paymentStatusMessage.value = "";
+  payingOrder.value = null;
 };
 
 const startPolling = () => {
@@ -944,6 +1158,23 @@ const subscribeOrderEvents = () => {
             paymentTransactionId: data.transactionId,
             paymentTime: data.paymentTime,
           };
+          if (payingOrder.value?.id === data.id) {
+            paymentStatus.value = {
+              ...(paymentStatus.value || {}),
+              orderId: data.id,
+              orderNumber: old.orderNumber,
+              localStatus: data.status,
+              providerStatus: data.status === "PAID" ? "PAID" : paymentStatus.value?.providerStatus,
+              paymentMethod: data.paymentMethod,
+              transactionId: data.transactionId,
+              paymentTime: data.paymentTime,
+              queryTime: new Date().toISOString(),
+            };
+            if (isPaymentSettled(paymentStatus.value)) {
+              stopPaymentStatusPolling();
+              paymentStatusMessage.value = `订单号 ${old.orderNumber} 已支付成功`;
+            }
+          }
         }
       } catch (e) {}
     });
@@ -1132,6 +1363,7 @@ onUnmounted(() => {
     clearTimeout(orderPollTimer);
     orderPollTimer = null;
   }
+  stopPaymentStatusPolling();
 });
 </script>
 
@@ -1201,6 +1433,74 @@ onUnmounted(() => {
 .check-icon {
   color: #409eff;
   font-size: 20px;
+}
+
+.payment-result-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.payment-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.payment-result-mode {
+  color: #606266;
+  font-size: 13px;
+}
+
+.payment-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.payment-result-item {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.payment-result-item span,
+.payment-result-block span {
+  display: block;
+  margin-bottom: 5px;
+  color: #909399;
+  font-size: 12px;
+}
+
+.payment-result-item strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #303133;
+  font-size: 14px;
+}
+
+.payment-result-block {
+  min-width: 0;
+  padding: 10px;
+  border: 1px dashed #dcdfe6;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.payment-result-block code {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #303133;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.payment-result-alert {
+  margin-top: 2px;
 }
 
 .banner-actions {
