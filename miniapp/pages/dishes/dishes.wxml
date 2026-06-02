@@ -51,8 +51,11 @@
       </view>
       <view class="bottom-line">
         <text class="stock {{item.available ? '' : 'sold-out'}}">{{item.stockText}}</text>
-        <view class="tags">
+        <view class="row-actions">
+          <view wx:if="{{item.available}}" class="cart-button" data-id="{{item.id}}" catchtap="addToCart">加购</view>
+          <view class="tags">
           <text wx:for="{{item.tags}}" wx:key="*this" class="tag">{{item}}</text>
+          </view>
         </view>
       </view>
     </view>

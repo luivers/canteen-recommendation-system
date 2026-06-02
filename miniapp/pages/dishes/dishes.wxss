@@ -197,6 +197,24 @@
   gap: 8rpx;
 }
 
+.row-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.cart-button {
+  flex-shrink: 0;
+  height: 48rpx;
+  padding: 0 16rpx;
+  border-radius: 9rpx;
+  background: #0f766e;
+  color: #ffffff;
+  font-size: 23rpx;
+  line-height: 48rpx;
+}
+
 .tag {
   max-width: 92rpx;
   padding: 4rpx 10rpx;

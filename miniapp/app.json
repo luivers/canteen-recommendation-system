@@ -4,6 +4,7 @@
     "pages/dishes/dishes",
     "pages/dish-detail/dish-detail",
     "pages/cart/cart",
+    "pages/order-detail/order-detail",
     "pages/orders/orders",
     "pages/profile/profile"
   ],

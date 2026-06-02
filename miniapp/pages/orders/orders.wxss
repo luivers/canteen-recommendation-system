@@ -1,3 +1,138 @@
-.panel {
-  margin-top: 24rpx;
+.top-bar {
+  margin-bottom: 22rpx;
+}
+
+.status-strip {
+  width: 100%;
+  margin-bottom: 20rpx;
+  white-space: nowrap;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 118rpx;
+  height: 62rpx;
+  margin-right: 14rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 10rpx;
+  background: #ffffff;
+  color: #4b5563;
+  font-size: 26rpx;
+  box-sizing: border-box;
+}
+
+.status-chip.active {
+  border-color: #0f766e;
+  background: #ccfbf1;
+  color: #115e59;
+  font-weight: 700;
+}
+
+.state {
+  padding: 36rpx 24rpx;
+  border-radius: 12rpx;
+  background: #ffffff;
+  color: #6b7280;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.order-card {
+  margin-bottom: 18rpx;
+  padding: 22rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.order-head,
+.order-meta,
+.order-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.order-number {
+  display: block;
+  color: #111827;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.date {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 23rpx;
+}
+
+.status {
+  flex-shrink: 0;
+  padding: 7rpx 14rpx;
+  border-radius: 8rpx;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 24rpx;
+}
+
+.PENDING {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.PAID,
+.PREPARING,
+.READY {
+  background: #ccfbf1;
+  color: #115e59;
+}
+
+.COMPLETED {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.CANCELLED {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.item-summary {
+  display: -webkit-box;
+  margin-top: 18rpx;
+  color: #111827;
+  font-size: 28rpx;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.order-meta {
+  margin-top: 14rpx;
+  color: #6b7280;
+  font-size: 24rpx;
+}
+
+.order-foot {
+  justify-content: flex-end;
+  margin-top: 18rpx;
+}
+
+.price {
+  color: #dc2626;
+  font-size: 32rpx;
+  font-weight: 800;
+}
+
+.load-more {
+  padding: 24rpx 0 12rpx;
+  color: #9ca3af;
+  font-size: 24rpx;
+  text-align: center;
 }

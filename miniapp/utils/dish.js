@@ -1,3 +1,5 @@
+const { apiBaseUrl } = require("../config/env");
+
 const CATEGORY_LABELS = {
   MAIN_DISH: "主食",
   MEAT_DISH: "荤菜",
@@ -74,9 +76,34 @@ const normalizeTags = (dish) => {
   return toArray(tags).filter(Boolean).slice(0, 4);
 };
 
+const resolveImageValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.find(Boolean) || "";
+  }
+  return value || "";
+};
+
+const normalizeImageUrl = (dish) => {
+  const rawImageUrl = resolveImageValue(
+    dish.imageUrl || dish.image || dish.coverUrl || dish.pictureUrl || dish.picture || dish.imgUrl,
+  );
+  if (!rawImageUrl || typeof rawImageUrl !== "string") return "";
+
+  const imageUrl = rawImageUrl.trim();
+  if (!imageUrl) return "";
+  if (/^(https?:)?\/\//.test(imageUrl) || imageUrl.startsWith("data:image/")) {
+    return imageUrl.startsWith("//") ? `https:${imageUrl}` : imageUrl;
+  }
+
+  const baseUrl = (apiBaseUrl || "").replace(/\/+$/, "");
+  const path = imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
+  return baseUrl ? `${baseUrl}${path}` : path;
+};
+
 const normalizeDish = (rawDish = {}, extra = {}) => {
   const dish = unwrapData(rawDish) || {};
   const category = normalizeCategory(dish);
+  const imageUrl = normalizeImageUrl(dish);
   const status = normalizeStatus(dish.status);
   const promotionPrice = dish.promotionPrice;
   const hasPromotion = promotionPrice !== null && promotionPrice !== undefined && promotionPrice !== "";
@@ -99,8 +126,8 @@ const normalizeDish = (rawDish = {}, extra = {}) => {
     id: dish.id,
     name: dish.name || "未命名菜品",
     description: dish.description || "暂无菜品介绍",
-    imageUrl: dish.imageUrl || "",
-    hasImage: !!dish.imageUrl,
+    imageUrl,
+    hasImage: !!imageUrl,
     price: dish.price,
     priceText: formatPrice(hasPromotion ? promotionPrice : dish.price),
     originalPriceText: hasPromotion ? formatPrice(dish.price) : "",

@@ -1,6 +1,85 @@
-<view class="page">
-  <view class="panel">
-    <text class="title">购物车</text>
-    <text class="muted">购物车、本地下单和后端订单创建会在 ST-014 接入。</text>
+<view class="page cart-page">
+  <view class="top-bar">
+    <view>
+      <text class="title">购物车</text>
+      <text class="muted">共 {{totalQuantity}} 件商品</text>
+    </view>
+    <view class="ghost-button" bindtap="clearCart">清空</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state">加载中...</view>
+  <view wx:elif="{{errorMessage && !cartItems.length}}" class="state">
+    <text>{{errorMessage}}</text>
+    <view class="primary-button inline" bindtap="goDishes">去选菜</view>
+  </view>
+
+  <view wx:for="{{cartItems}}" wx:key="id" class="cart-item">
+    <image wx:if="{{item.hasImage}}" class="item-image" src="{{item.imageUrl}}" mode="aspectFill" />
+    <view wx:else class="item-image placeholder">{{item.categoryLabel}}</view>
+    <view class="item-main">
+      <view class="title-line">
+        <text class="item-name">{{item.name}}</text>
+        <text class="price">{{item.priceText}}</text>
+      </view>
+      <text class="muted one-line">{{item.canteenName}} · {{item.windowName}}</text>
+      <view class="item-bottom">
+        <text class="subtotal">{{item.subtotalText}}</text>
+        <view class="stepper">
+          <view
+            class="step-button"
+            data-id="{{item.id}}"
+            data-quantity="{{item.quantity - 1}}"
+            bindtap="updateQuantity"
+          >-</view>
+          <text class="quantity">{{item.quantity}}</text>
+          <view
+            class="step-button"
+            data-id="{{item.id}}"
+            data-quantity="{{item.quantity + 1}}"
+            bindtap="updateQuantity"
+          >+</view>
+        </view>
+        <view class="remove" data-id="{{item.id}}" bindtap="removeItem">删除</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{cartItems.length}}" class="panel order-panel">
+    <text class="section-title">取餐方式</text>
+    <view class="segmented">
+      <view
+        class="segment {{pickupType === 'IMMEDIATE' ? 'active' : ''}}"
+        data-type="IMMEDIATE"
+        bindtap="setPickupType"
+      >立即取餐</view>
+      <view
+        class="segment {{pickupType === 'RESERVATION' ? 'active' : ''}}"
+        data-type="RESERVATION"
+        bindtap="setPickupType"
+      >预约取餐</view>
+    </view>
+    <picker
+      wx:if="{{pickupType === 'RESERVATION'}}"
+      mode="time"
+      value="{{reservationTime}}"
+      bindchange="onReservationTimeChange"
+    >
+      <view class="picker-field">{{reservationTime || '选择预约时间'}}</view>
+    </picker>
+    <textarea
+      class="remarks"
+      value="{{remarks}}"
+      maxlength="100"
+      placeholder="备注口味、餐具等需求"
+      bindinput="onRemarksInput"
+    />
+  </view>
+
+  <view wx:if="{{cartItems.length}}" class="checkout-bar">
+    <view>
+      <text class="muted">合计</text>
+      <text class="checkout-price">{{totalAmountText}}</text>
+    </view>
+    <button class="checkout-button" loading="{{submitting}}" bindtap="createOrder">提交订单</button>
   </view>
 </view>

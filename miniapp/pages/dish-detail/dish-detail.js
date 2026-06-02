@@ -1,4 +1,4 @@
-const { dishApi } = require("../../api/index");
+const { dishApi, orderApi } = require("../../api/index");
 const { normalizeDish } = require("../../utils/dish");
 
 Page({
@@ -39,5 +39,28 @@ Page({
   reload() {
     if (!this.data.id) return;
     this.loadDish(this.data.id);
+  },
+
+  addToCart() {
+    if (!this.data.id || !this.data.dish || !this.data.dish.available) return;
+
+    orderApi
+      .addToCart({ dishId: this.data.id, quantity: 1 })
+      .then(() => {
+        wx.showToast({
+          title: "已加入购物车",
+          icon: "success",
+        });
+      })
+      .catch((error) => {
+        wx.showToast({
+          title: error.message || "加购失败",
+          icon: "none",
+        });
+      });
+  },
+
+  goCart() {
+    wx.navigateTo({ url: "/pages/cart/cart" });
   },
 });

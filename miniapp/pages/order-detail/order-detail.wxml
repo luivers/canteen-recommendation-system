@@ -1,0 +1,89 @@
+<view class="page order-detail-page">
+  <view wx:if="{{loading && !order}}" class="state">加载中...</view>
+  <view wx:elif="{{errorMessage && !order}}" class="state error">
+    <text>{{errorMessage}}</text>
+    <view wx:if="{{id}}" class="retry" bindtap="reload">重试</view>
+  </view>
+
+  <view wx:if="{{order}}">
+    <view class="panel summary-panel">
+      <view class="summary-head">
+        <view>
+          <text class="status-label">{{order.statusLabel}}</text>
+          <text class="muted">订单号 {{order.orderNumber}}</text>
+        </view>
+        <text class="polling">轮询 {{lastPolledAt}}</text>
+      </view>
+      <text class="price">{{order.payableAmountText}}</text>
+      <view class="summary-meta">
+        <text>{{order.pickupTypeLabel}}</text>
+        <text wx:if="{{order.pickupTimeText}}">{{order.pickupTimeText}}</text>
+      </view>
+    </view>
+
+    <view class="panel">
+      <text class="section-title">商品明细</text>
+      <view wx:for="{{order.items}}" wx:key="id" class="order-item">
+        <image wx:if="{{item.hasImage}}" class="item-image" src="{{item.imageUrl}}" mode="aspectFill" />
+        <view wx:else class="item-image placeholder">{{item.categoryLabel}}</view>
+        <view class="item-main">
+          <view class="title-line">
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-price">{{item.subtotalText}}</text>
+          </view>
+          <text class="muted one-line">{{item.canteenName}} · {{item.windowName}}</text>
+          <text class="quantity">x{{item.quantity}} · {{item.unitPriceText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="panel">
+      <text class="section-title">取餐与支付</text>
+      <view class="info-row">
+        <text class="label">食堂</text>
+        <text>{{order.canteenName || '待定'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">窗口</text>
+        <text>{{order.windowName || '待定'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">下单时间</text>
+        <text>{{order.createdAtText || '待定'}}</text>
+      </view>
+      <view class="info-row" wx:if="{{order.updatedAtText}}">
+        <text class="label">更新时间</text>
+        <text>{{order.updatedAtText}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">支付方式</text>
+        <text>{{order.paymentMethod || '未支付'}}</text>
+      </view>
+      <view class="info-row" wx:if="{{order.remarks}}">
+        <text class="label">备注</text>
+        <text>{{order.remarks}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{order}}" class="action-bar">
+    <button
+      wx:if="{{order.isPendingPayment}}"
+      class="primary-action"
+      loading="{{acting}}"
+      bindtap="goPay"
+    >去支付</button>
+    <button
+      wx:if="{{order.canConfirmPickup}}"
+      class="primary-action"
+      loading="{{acting}}"
+      bindtap="confirmPickup"
+    >确认取餐</button>
+    <button
+      wx:if="{{order.cancellable}}"
+      class="ghost-action"
+      loading="{{acting}}"
+      bindtap="cancelOrder"
+    >取消订单</button>
+  </view>
+</view>
