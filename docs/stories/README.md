@@ -6,7 +6,7 @@
 - [Sprint Plan](../sprint-plan-canteen-recommendation-2026-05-17.md)
 - [Sprint Status](../sprint-status.yaml)
 
-下一步建议执行 `/bmad:create-story ST-011`。
+下一步建议执行 `/bmad:create-story ST-012`。
 
 已创建故事：
 
@@ -20,3 +20,4 @@
 - [ST-008: 支付创建接口返回二维码 / 跳转 / 小程序参数占位](ST-008-payment-create-qr-redirect-miniapp-params.md)
 - [ST-009: 支付回调验签、幂等处理、订单置为 PAID 并推送 SSE](ST-009-payment-callback-idempotent-paid-sse.md)
 - [ST-010: 支付状态查询与前端支付结果页 / 弹窗](ST-010-payment-status-result-dialog.md)
+- [ST-011: 创建原生微信小程序工程骨架和 request 封装](ST-011-miniapp-native-skeleton-request-wrapper.md)

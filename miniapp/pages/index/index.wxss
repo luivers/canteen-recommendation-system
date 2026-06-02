@@ -1,0 +1,19 @@
+.section {
+  margin-top: 24rpx;
+}
+
+.card {
+  margin-bottom: 20rpx;
+  padding: 24rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.card-title {
+  display: block;
+  margin-bottom: 8rpx;
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 600;
+}

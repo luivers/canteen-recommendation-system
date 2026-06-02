@@ -1,0 +1,6 @@
+<view class="page">
+  <view class="panel">
+    <text class="title">购物车</text>
+    <text class="muted">购物车、本地下单和后端订单创建会在 ST-014 接入。</text>
+  </view>
+</view>

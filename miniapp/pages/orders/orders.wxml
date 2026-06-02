@@ -1,0 +1,6 @@
+<view class="page">
+  <view class="panel">
+    <text class="title">订单</text>
+    <text class="muted">订单列表、订单详情和 5 秒短轮询会在 ST-014 接入。</text>
+  </view>
+</view>

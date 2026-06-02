@@ -1,0 +1,13 @@
+<view class="page">
+  <view class="panel">
+    <text class="title">校园食堂推荐</text>
+    <text class="muted">小程序工程骨架已就绪。首页、菜品列表、推荐展示会在 ST-013 接入真实数据。</text>
+  </view>
+
+  <view class="section">
+    <view wx:for="{{cards}}" wx:key="title" class="card">
+      <text class="card-title">{{item.title}}</text>
+      <text class="muted">{{item.description}}</text>
+    </view>
+  </view>
+</view>

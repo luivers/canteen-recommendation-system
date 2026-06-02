@@ -18,10 +18,10 @@ goals:
 
 story_summary:
   total: 24
-  completed: 9
+  completed: 10
   ready_for_dev: 1
   in_progress: 0
-  pending: 14
+  pending: 13
 
 stories:
   - id: "ST-001"
@@ -129,7 +129,10 @@ stories:
     priority: "Must"
     estimate: 3
     planned_day: "D4"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-011-miniapp-native-skeleton-request-wrapper.md"
+    created_at: "2026-06-01"
+    completed_at: "2026-06-01"
   - id: "ST-012"
     title: "小程序 wx.login 静默登录与 JWT 存储"
     epic: "EPIC-005"
@@ -223,4 +226,4 @@ stories:
     status: "pending"
 
 next_recommended_workflow: "/bmad:create-story"
-next_story: "ST-011"
+next_story: "ST-012"

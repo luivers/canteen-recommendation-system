@@ -1,0 +1,6 @@
+<view class="page">
+  <view class="panel">
+    <text class="title">我的</text>
+    <text class="muted">静默登录会在 ST-012 接入，个人中心、评价和积分商城会在 ST-016 补齐。</text>
+  </view>
+</view>
