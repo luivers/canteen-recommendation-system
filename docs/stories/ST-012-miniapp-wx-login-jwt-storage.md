@@ -168,4 +168,4 @@ Validation:
 - `mvn test` passed in `java/`: 29 tests, 0 failures, 0 errors.
 - `node -e "const fs=require('fs'); const path=require('path'); const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>{const p=path.join(d,e.name); return e.isDirectory()?walk(p):[p];}); const files=walk('miniapp').filter(f=>f.endsWith('.js')); files.forEach(f=>new Function(fs.readFileSync(f,'utf8'))); console.log('miniapp all js syntax ok:', files.length)"` passed with 16 JS files.
 - `rg -n "wx.login|silentLogin|/api/miniapp/login|miniappOpenid|MINIAPP_MODE|Authorization" miniapp java/src/main/java java/src/main/resources java/src/test/java` passed.
-- WeChat DevTools CLI validation was not run because the local CLI path is not configured in this environment.
+- WeChat DevTools CLI path is configured at `C:\Program Files (x86)\Tencent\微信web开发者工具\cli.bat`; CLI `help` runs successfully. `islogin` still requires 微信开发者工具的 Settings > Security > Service Port to be enabled, otherwise it times out by design.

@@ -6,7 +6,7 @@
 - [Sprint Plan](../sprint-plan-canteen-recommendation-2026-05-17.md)
 - [Sprint Status](../sprint-status.yaml)
 
-下一步建议执行 `/bmad:create-story ST-013`。
+下一步建议执行 `/bmad:create-story ST-014`。
 
 已创建故事：
 
@@ -22,3 +22,4 @@
 - [ST-010: 支付状态查询与前端支付结果页 / 弹窗](ST-010-payment-status-result-dialog.md)
 - [ST-011: 创建原生微信小程序工程骨架和 request 封装](ST-011-miniapp-native-skeleton-request-wrapper.md)
 - [ST-012: 小程序 wx.login 静默登录与 JWT 存储](ST-012-miniapp-wx-login-jwt-storage.md)
+- [ST-013: 小程序首页、菜品列表、详情和推荐展示](ST-013-miniapp-home-dishes-recommendations.md)
