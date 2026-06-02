@@ -19,6 +19,11 @@ const setCurrentUser = (user) => {
   storage.set(USER_KEY, user || null);
 };
 
+const saveAuthState = (token, user) => {
+  setToken(token);
+  setCurrentUser(user);
+};
+
 const clearAuth = () => {
   clearToken();
   storage.remove(USER_KEY);
@@ -37,6 +42,7 @@ module.exports = {
   clearToken,
   getCurrentUser,
   setCurrentUser,
+  saveAuthState,
   clearAuth,
   getAuthHeader,
 };

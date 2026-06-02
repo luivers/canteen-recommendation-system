@@ -41,7 +41,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(authz -> authz
                 // Public auth endpoints
-                .requestMatchers("/api/users/login", "/api/users/register", "/api/users/test-connection").permitAll()
+                .requestMatchers("/api/users/login", "/api/users/register", "/api/users/test-connection", "/api/miniapp/login").permitAll()
 
                 // Public read APIs
                 .requestMatchers(HttpMethod.GET,
@@ -72,6 +72,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/statistics/**").authenticated()
                 .requestMatchers("/api/orders/**").authenticated()
                 .requestMatchers("/api/payments/**").authenticated()
+                .requestMatchers("/api/miniapp/**").authenticated()
                 .requestMatchers("/api/users/**").authenticated()
 
                 .requestMatchers("/api/test/**").permitAll()

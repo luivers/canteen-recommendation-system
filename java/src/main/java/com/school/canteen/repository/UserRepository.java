@@ -15,10 +15,14 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findByStudentId(String studentId);
     
     Optional<User> findByUsername(String username);
+
+    Optional<User> findByMiniappOpenid(String miniappOpenid);
     
     boolean existsByStudentId(String studentId);
     
     boolean existsByUsername(String username);
+
+    boolean existsByMiniappOpenid(String miniappOpenid);
     
     List<User> findByRole(User.UserRole role);
     
