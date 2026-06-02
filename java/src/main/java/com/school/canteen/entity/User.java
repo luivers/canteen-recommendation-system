@@ -20,6 +20,9 @@ public class User {
     
     @Column(unique = true, nullable = false)
     private String studentId; // 学号
+
+    @Column(unique = true)
+    private String miniappOpenid; // 微信小程序 openid
     
     @Column(nullable = false)
     private String username;

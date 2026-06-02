@@ -55,6 +55,13 @@ payment:
     qr-code-url: ${PAYMENT_MOCK_QR_CODE_URL:mock://canteen-payment}
     redirect-url: ${PAYMENT_MOCK_REDIRECT_URL:}
 
+miniapp:
+  mode: ${MINIAPP_MODE:mock}
+  app-id: ${WECHAT_MINIAPP_APP_ID:}
+  app-secret: ${WECHAT_MINIAPP_APP_SECRET:}
+  mock:
+    openid-prefix: ${MINIAPP_MOCK_OPENID_PREFIX:mock-openid-}
+
 file:
   # 默认使用本项目下的 uploads；也可通过环境变量 FILE_UPLOAD_DIR 覆盖
   upload-dir: ${FILE_UPLOAD_DIR:C:\Users\ASUS\Desktop\毕业设计\论文\canteen_recommendation_3.0\canteen_recommendation_3.0\java\uploads}

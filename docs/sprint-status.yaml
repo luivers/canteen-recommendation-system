@@ -18,10 +18,10 @@ goals:
 
 story_summary:
   total: 24
-  completed: 10
+  completed: 11
   ready_for_dev: 1
   in_progress: 0
-  pending: 13
+  pending: 12
 
 stories:
   - id: "ST-001"
@@ -139,7 +139,10 @@ stories:
     priority: "Must"
     estimate: 3
     planned_day: "D4"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-012-miniapp-wx-login-jwt-storage.md"
+    created_at: "2026-06-02"
+    completed_at: "2026-06-02"
   - id: "ST-013"
     title: "小程序首页、菜品列表、详情和推荐展示"
     epic: "EPIC-005"
@@ -226,4 +229,4 @@ stories:
     status: "pending"
 
 next_recommended_workflow: "/bmad:create-story"
-next_story: "ST-012"
+next_story: "ST-013"

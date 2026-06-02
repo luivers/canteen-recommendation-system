@@ -1,3 +1,11 @@
 .panel {
   margin-top: 24rpx;
 }
+
+.login-button {
+  margin: 28rpx 0 20rpx;
+  border-radius: 8rpx;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 28rpx;
+}
