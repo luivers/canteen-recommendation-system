@@ -1,11 +1,107 @@
-.panel {
-  margin-top: 24rpx;
+.profile-page {
+  padding-bottom: 48rpx;
 }
 
-.login-button {
-  margin: 28rpx 0 20rpx;
+.profile-card,
+.points-card,
+.menu-item {
+  border: 1rpx solid #e5e7eb;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 28rpx;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 50%;
+  background: #ccfbf1;
+  color: #0f766e;
+  font-size: 42rpx;
+  font-weight: 800;
+}
+
+.profile-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.role {
+  display: inline-flex;
+  margin-top: 8rpx;
+  padding: 5rpx 12rpx;
   border-radius: 8rpx;
-  background: #16a34a;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 23rpx;
+}
+
+.points-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin-top: 18rpx;
+  padding: 26rpx;
+}
+
+.points {
+  display: block;
+  margin-top: 6rpx;
+  color: #dc2626;
+  font-size: 48rpx;
+  font-weight: 800;
+}
+
+.refresh-button {
+  width: 132rpx;
+  height: 66rpx;
+  margin: 0;
+  border-radius: 10rpx;
+  background: #0f766e;
   color: #ffffff;
-  font-size: 28rpx;
+  font-size: 26rpx;
+  line-height: 66rpx;
+}
+
+.message {
+  display: block;
+  margin: 18rpx 0 0;
+  color: #6b7280;
+  font-size: 25rpx;
+}
+
+.menu-list {
+  margin-top: 20rpx;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin-bottom: 16rpx;
+  padding: 22rpx;
+}
+
+.menu-title {
+  display: block;
+  color: #111827;
+  font-size: 29rpx;
+  font-weight: 800;
+}
+
+.arrow {
+  flex-shrink: 0;
+  color: #9ca3af;
+  font-size: 42rpx;
 }

@@ -1,0 +1,44 @@
+.top-bar {
+  margin-bottom: 22rpx;
+}
+
+.state,
+.load-more {
+  padding: 28rpx 0;
+  color: #6b7280;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.log-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin-bottom: 18rpx;
+  padding: 22rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.log-title {
+  display: block;
+  color: #111827;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.points {
+  flex-shrink: 0;
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+.earn {
+  color: #047857;
+}
+
+.spend {
+  color: #dc2626;
+}

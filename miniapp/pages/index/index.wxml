@@ -1,13 +1,83 @@
 <view class="page">
-  <view class="panel">
-    <text class="title">校园食堂推荐</text>
-    <text class="muted">小程序工程骨架已就绪。首页、菜品列表、推荐展示会在 ST-013 接入真实数据。</text>
+  <view class="hero">
+    <view>
+      <text class="eyebrow">今日食堂</text>
+      <text class="title">校园食堂推荐</text>
+      <text class="hero-meta">今天吃点好的</text>
+    </view>
+    <view class="hero-action" bindtap="openDishes">全部菜品</view>
   </view>
 
-  <view class="section">
-    <view wx:for="{{cards}}" wx:key="title" class="card">
-      <text class="card-title">{{item.title}}</text>
-      <text class="muted">{{item.description}}</text>
+  <view wx:if="{{loading}}" class="state">加载中...</view>
+  <view wx:elif="{{errorMessage}}" class="state error">{{errorMessage}}</view>
+
+  <view class="section" wx:if="{{hotDishes.length}}">
+    <view class="section-head">
+      <text class="section-title">热销菜品</text>
+      <text class="section-more" bindtap="openDishes">更多</text>
+    </view>
+    <scroll-view scroll-x class="dish-strip" show-scrollbar="false">
+      <view
+        wx:for="{{hotDishes}}"
+        wx:key="id"
+        class="dish-card"
+        data-id="{{item.id}}"
+        bindtap="openDish"
+      >
+        <image wx:if="{{item.hasImage}}" class="dish-image" src="{{item.imageUrl}}" mode="aspectFill" />
+        <view wx:else class="dish-image placeholder">{{item.categoryLabel}}</view>
+        <text class="dish-name">{{item.name}}</text>
+        <view class="dish-meta">
+          <text class="price">{{item.priceText}}</text>
+          <text>{{item.salesText}}</text>
+        </view>
+        <text class="muted one-line">{{item.windowName}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="section" wx:if="{{personalizedDishes.length}}">
+    <view class="section-head">
+      <text class="section-title">猜你喜欢</text>
+      <text class="section-more" bindtap="openDishes">换个筛选</text>
+    </view>
+    <view
+      wx:for="{{personalizedDishes}}"
+      wx:key="id"
+      class="recommend-row"
+      data-id="{{item.id}}"
+      bindtap="openDish"
+    >
+      <image wx:if="{{item.hasImage}}" class="row-image" src="{{item.imageUrl}}" mode="aspectFill" />
+      <view wx:else class="row-image row-placeholder">{{item.categoryLabel}}</view>
+      <view class="row-main">
+        <view class="row-title-line">
+          <text class="row-title">{{item.name}}</text>
+          <text class="price">{{item.priceText}}</text>
+        </view>
+        <text class="muted one-line">{{item.canteenName}} · {{item.windowName}}</text>
+        <text wx:if="{{item.reasonText}}" class="reason">{{item.reasonText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{healthDishes.length}}">
+    <view class="section-head">
+      <text class="section-title">健康目标推荐</text>
+      <text class="section-more" bindtap="loadHome">刷新</text>
+    </view>
+    <view class="health-grid">
+      <view
+        wx:for="{{healthDishes}}"
+        wx:key="id"
+        class="health-item"
+        data-id="{{item.id}}"
+        bindtap="openDish"
+      >
+        <text class="health-name">{{item.name}}</text>
+        <text class="muted">{{item.caloriesText}}</text>
+        <text wx:if="{{item.fitPercentText}}" class="fit">{{item.fitPercentText}}</text>
+      </view>
     </view>
   </view>
 </view>

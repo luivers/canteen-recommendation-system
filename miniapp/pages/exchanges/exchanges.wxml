@@ -1,0 +1,32 @@
+<view class="page">
+  <view class="top-bar">
+    <text class="title">兑换记录</text>
+    <text class="muted">共 {{total}} 条记录</text>
+  </view>
+
+  <scroll-view scroll-x class="status-strip" show-scrollbar="false">
+    <view
+      wx:for="{{statusTabs}}"
+      wx:key="value"
+      class="status-chip {{activeStatus === item.value ? 'active' : ''}}"
+      data-value="{{item.value}}"
+      bindtap="selectStatus"
+    >{{item.label}}</view>
+  </scroll-view>
+
+  <view wx:if="{{loading}}" class="state">加载中...</view>
+  <view wx:elif="{{errorMessage && !exchanges.length}}" class="state">{{errorMessage}}</view>
+
+  <view wx:for="{{exchanges}}" wx:key="id" class="exchange-card">
+    <view class="card-head">
+      <text class="name">{{item.rewardName}}</text>
+      <text class="status">{{item.statusLabel}}</text>
+    </view>
+    <text class="muted">{{item.pointsText}} · {{item.exchangeTimeText}}</text>
+    <text class="muted" wx:if="{{item.faceValueText}}">面额 {{item.faceValueText}}</text>
+    <text class="muted" wx:if="{{item.receiverName}}">收货人 {{item.receiverName}} {{item.receiverPhone}}</text>
+  </view>
+
+  <view wx:if="{{loadingMore}}" class="load-more">继续加载...</view>
+  <view wx:elif="{{exchanges.length && !hasMore}}" class="load-more">没有更多了</view>
+</view>

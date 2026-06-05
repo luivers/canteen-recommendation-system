@@ -8,7 +8,12 @@ const queryPaymentStatus = (orderId) => {
   return get(`/api/payments/orders/${orderId}/status`);
 };
 
+const completeMockPayment = (orderId, payload = {}) => {
+  return post(`/api/payments/orders/${orderId}/success`, payload);
+};
+
 module.exports = {
   createPayment,
   queryPaymentStatus,
+  completeMockPayment,
 };

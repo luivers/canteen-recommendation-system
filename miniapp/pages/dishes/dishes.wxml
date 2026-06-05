@@ -1,0 +1,66 @@
+<view class="page">
+  <view class="search-bar">
+    <form bindsubmit="submitSearch" class="search-form">
+      <input
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="搜索菜品"
+        confirm-type="search"
+        bindinput="onKeywordInput"
+        bindconfirm="submitSearch"
+      />
+      <button class="search-button" form-type="submit">搜索</button>
+    </form>
+    <view wx:if="{{keyword}}" class="clear-button" bindtap="clearSearch">清空</view>
+  </view>
+
+  <scroll-view scroll-x class="category-strip" show-scrollbar="false">
+    <view
+      wx:for="{{categories}}"
+      wx:key="value"
+      class="category-chip {{activeCategory === item.value ? 'active' : ''}}"
+      data-value="{{item.value}}"
+      data-label="{{item.label}}"
+      bindtap="selectCategory"
+    >
+      {{item.label}}
+    </view>
+  </scroll-view>
+
+  <view class="summary">
+    <text>共 {{totalElements}} 道菜品</text>
+    <text wx:if="{{activeCategoryLabel}}">当前分类：{{activeCategoryLabel}}</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="state">加载中...</view>
+  <view wx:elif="{{errorMessage}}" class="state error">{{errorMessage}}</view>
+
+  <view wx:for="{{dishes}}" wx:key="id" class="dish-row" data-id="{{item.id}}" bindtap="openDish">
+    <image wx:if="{{item.hasImage}}" class="dish-image" src="{{item.imageUrl}}" mode="aspectFill" />
+    <view wx:else class="dish-image placeholder">{{item.categoryLabel}}</view>
+    <view class="dish-main">
+      <view class="title-line">
+        <text class="dish-name">{{item.name}}</text>
+        <text class="price">{{item.priceText}}</text>
+      </view>
+      <text class="muted one-line">{{item.canteenName}} · {{item.windowName}}</text>
+      <view class="facts">
+        <text>{{item.categoryLabel}}</text>
+        <text>{{item.ratingText}}</text>
+        <text>{{item.salesText}}</text>
+      </view>
+      <view class="bottom-line">
+        <text class="stock {{item.available ? '' : 'sold-out'}}">{{item.stockText}}</text>
+        <view class="row-actions">
+          <view wx:if="{{item.available}}" class="cart-button" data-id="{{item.id}}" catchtap="addToCart">加购</view>
+          <view class="tags">
+          <text wx:for="{{item.tags}}" wx:key="*this" class="tag">{{item}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loadingMore}}" class="load-more">继续加载...</view>
+  <view wx:elif="{{dishes.length && !hasMore}}" class="load-more">没有更多了</view>
+</view>
