@@ -57,12 +57,45 @@
       </view>
       <view class="info-row">
         <text class="label">支付方式</text>
-        <text>{{order.paymentMethod || '未支付'}}</text>
+        <text>{{paymentSummary.paymentMethodText || order.paymentMethod || '未支付'}}</text>
+      </view>
+      <view class="info-row" wx:if="{{paymentSummary.statusText}}">
+        <text class="label">支付状态</text>
+        <text>{{paymentSummary.statusText}}</text>
+      </view>
+      <view class="info-row" wx:if="{{paymentSummary.showProviderStatus}}">
+        <text class="label">渠道状态</text>
+        <text>{{paymentSummary.providerStatusText}}</text>
+      </view>
+      <view class="info-row" wx:if="{{paymentSummary.providerText}}">
+        <text class="label">支付渠道</text>
+        <text>{{paymentSummary.providerText}}</text>
+      </view>
+      <view class="info-row" wx:if="{{paymentSummary.transactionId || order.paymentTransactionId}}">
+        <text class="label">交易号</text>
+        <text class="value-wrap">{{paymentSummary.transactionId || order.paymentTransactionId}}</text>
       </view>
       <view class="info-row" wx:if="{{order.remarks}}">
         <text class="label">备注</text>
         <text>{{order.remarks}}</text>
       </view>
+    </view>
+
+    <view class="panel">
+      <text class="section-title">订单评价</text>
+      <view wx:if="{{review}}">
+        <view class="review-line">
+          <text class="review-score">{{review.ratingText}}</text>
+          <text class="muted">{{review.statusLabel}}</text>
+        </view>
+        <text class="review-comment">{{review.summary}}</text>
+        <text class="muted" wx:if="{{review.quickTagsText}}">{{review.quickTagsText}}</text>
+      </view>
+      <view wx:elif="{{canReview}}" class="review-entry" bindtap="goReview">
+        <text>本单已可评价</text>
+        <text class="review-link">去评价</text>
+      </view>
+      <text wx:else class="muted">完成支付或取餐后可评价。</text>
     </view>
   </view>
 
@@ -71,18 +104,27 @@
       wx:if="{{order.isPendingPayment}}"
       class="primary-action"
       loading="{{acting}}"
+      disabled="{{acting}}"
       bindtap="goPay"
     >去支付</button>
+    <button
+      wx:if="{{canReview}}"
+      class="primary-action"
+      disabled="{{acting}}"
+      bindtap="goReview"
+    >去评价</button>
     <button
       wx:if="{{order.canConfirmPickup}}"
       class="primary-action"
       loading="{{acting}}"
+      disabled="{{acting}}"
       bindtap="confirmPickup"
     >确认取餐</button>
     <button
       wx:if="{{order.cancellable}}"
       class="ghost-action"
       loading="{{acting}}"
+      disabled="{{acting}}"
       bindtap="cancelOrder"
     >取消订单</button>
   </view>

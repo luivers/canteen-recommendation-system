@@ -1,0 +1,76 @@
+.top-bar {
+  margin-bottom: 22rpx;
+}
+
+.status-strip {
+  width: 100%;
+  margin-bottom: 20rpx;
+  white-space: nowrap;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 118rpx;
+  height: 62rpx;
+  margin-right: 14rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 10rpx;
+  background: #ffffff;
+  color: #4b5563;
+  font-size: 26rpx;
+  box-sizing: border-box;
+}
+
+.status-chip.active {
+  border-color: #0f766e;
+  background: #ccfbf1;
+  color: #115e59;
+  font-weight: 700;
+}
+
+.state,
+.load-more {
+  padding: 28rpx 0;
+  color: #6b7280;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.exchange-card {
+  margin-bottom: 18rpx;
+  padding: 22rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 10rpx;
+}
+
+.name {
+  min-width: 0;
+  flex: 1;
+  color: #111827;
+  font-size: 29rpx;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  flex-shrink: 0;
+  padding: 7rpx 14rpx;
+  border-radius: 8rpx;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 24rpx;
+}

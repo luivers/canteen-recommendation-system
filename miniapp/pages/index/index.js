@@ -64,7 +64,7 @@ Page({
   },
 
   openDishes() {
-    wx.navigateTo({ url: "/pages/dishes/dishes" });
+    wx.switchTab({ url: "/pages/dishes/dishes" });
   },
 
   openDish(event) {

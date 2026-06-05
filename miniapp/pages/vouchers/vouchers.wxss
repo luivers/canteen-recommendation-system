@@ -1,0 +1,84 @@
+.top-bar {
+  margin-bottom: 22rpx;
+}
+
+.status-strip {
+  width: 100%;
+  margin-bottom: 20rpx;
+  white-space: nowrap;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 118rpx;
+  height: 62rpx;
+  margin-right: 14rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 10rpx;
+  background: #ffffff;
+  color: #4b5563;
+  font-size: 26rpx;
+  box-sizing: border-box;
+}
+
+.status-chip.active {
+  border-color: #0f766e;
+  background: #ccfbf1;
+  color: #115e59;
+  font-weight: 700;
+}
+
+.state,
+.load-more {
+  padding: 28rpx 0;
+  color: #6b7280;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.voucher-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 18rpx;
+  padding: 22rpx;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.voucher-card.used {
+  opacity: 0.62;
+}
+
+.voucher-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 148rpx;
+  height: 104rpx;
+  border-radius: 10rpx;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 30rpx;
+  font-weight: 800;
+  text-align: center;
+}
+
+.voucher-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  display: block;
+  color: #111827;
+  font-size: 29rpx;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

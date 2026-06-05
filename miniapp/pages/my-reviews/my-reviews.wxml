@@ -1,0 +1,19 @@
+<view class="page">
+  <view class="top-bar">
+    <text class="title">我的评价</text>
+    <text class="muted">查看历史评价和商家回复</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="state">加载中...</view>
+  <view wx:elif="{{errorMessage && !reviews.length}}" class="state">{{errorMessage}}</view>
+
+  <view wx:for="{{reviews}}" wx:key="id" class="review-card" data-id="{{item.orderId}}" bindtap="openOrder">
+    <view class="review-head">
+      <text class="score">{{item.ratingText}}</text>
+      <text class="status">{{item.statusLabel}}</text>
+    </view>
+    <text class="comment">{{item.summary}}</text>
+    <text class="muted">订单 {{item.orderNumber || item.orderId}} · {{item.createdAtText}}</text>
+    <view wx:if="{{item.reply}}" class="reply">商家回复：{{item.reply}}</view>
+  </view>
+</view>

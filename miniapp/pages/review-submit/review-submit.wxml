@@ -1,0 +1,84 @@
+<view class="page review-page">
+  <view wx:if="{{loading && !order}}" class="state">加载中...</view>
+  <view wx:elif="{{errorMessage && !order}}" class="state error">{{errorMessage}}</view>
+
+  <view wx:if="{{order}}">
+    <view class="panel">
+      <text class="title">订单评价</text>
+      <text class="muted">订单号 {{order.orderNumber}}</text>
+      <text class="muted">{{order.itemSummary}}</text>
+    </view>
+
+    <view wx:if="{{existingReview}}" class="panel">
+      <text class="section-title">已评价</text>
+      <text class="score">{{existingReview.ratingText}}</text>
+      <text class="comment">{{existingReview.summary}}</text>
+      <text class="muted" wx:if="{{existingReview.quickTagsText}}">{{existingReview.quickTagsText}}</text>
+    </view>
+
+    <view wx:else>
+      <view class="panel">
+        <text class="section-title">总体评分</text>
+        <view class="stars">
+          <text
+            wx:for="{{ratingOptions}}"
+            wx:key="*this"
+            class="star {{item <= form.rating ? 'active' : ''}}"
+            data-field="rating"
+            data-value="{{item}}"
+            bindtap="setRating"
+          >★</text>
+        </view>
+      </view>
+
+      <view class="panel">
+        <text class="section-title">细分评分</text>
+        <view class="rating-row" wx:for="{{ratingGroups}}" wx:key="field">
+          <text class="label">{{item.label}}</text>
+          <view class="mini-stars">
+            <text
+              wx:for="{{ratingOptions}}"
+              wx:for-item="score"
+              wx:key="*this"
+              class="mini-star {{score <= item.value ? 'active' : ''}}"
+              data-field="{{item.field}}"
+              data-value="{{score}}"
+              bindtap="setRating"
+            >★</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="panel">
+        <text class="section-title">快捷标签</text>
+        <view class="tag-list">
+          <view
+            wx:for="{{tagOptions}}"
+            wx:key="label"
+            class="tag {{item.selected ? 'active' : ''}}"
+            data-tag="{{item.label}}"
+            bindtap="toggleTag"
+          >{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="panel">
+        <text class="section-title">评价内容</text>
+        <textarea
+          class="comment-input"
+          maxlength="1000"
+          placeholder="写下这次用餐体验"
+          value="{{form.comment}}"
+          bindinput="onCommentInput"
+        />
+        <view class="image-list">
+          <image wx:for="{{images}}" wx:key="*this" class="review-image" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="removeImage" />
+          <view wx:if="{{images.length < 3}}" class="image-picker" bindtap="chooseImages">+</view>
+        </view>
+        <text class="muted">点击图片可移除，最多 3 张。</text>
+      </view>
+
+      <button class="submit-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitReview">提交评价</button>
+    </view>
+  </view>
+</view>

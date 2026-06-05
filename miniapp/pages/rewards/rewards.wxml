@@ -1,0 +1,62 @@
+<view class="page rewards-page">
+  <view class="summary-card">
+    <view>
+      <text class="title">积分商城</text>
+      <text class="muted">当前积分</text>
+    </view>
+    <text class="balance">{{balance}}</text>
+  </view>
+
+  <view class="quick-actions">
+    <view class="quick-action" bindtap="openExchanges">兑换记录</view>
+    <view class="quick-action" bindtap="openVouchers">我的优惠券</view>
+  </view>
+
+  <view class="filter-panel">
+    <view class="search-row">
+      <input class="search-input" value="{{filters.keyword}}" placeholder="搜索奖励" bindinput="onKeywordInput" confirm-type="search" bindconfirm="searchRewards" />
+      <button class="search-button" bindtap="searchRewards">搜索</button>
+    </view>
+    <scroll-view scroll-x class="category-strip" show-scrollbar="false">
+      <view class="category-chip {{!filters.categoryId ? 'active' : ''}}" data-id="" bindtap="selectCategory">全部</view>
+      <view
+        wx:for="{{categories}}"
+        wx:key="id"
+        class="category-chip {{filters.categoryId == item.id ? 'active' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="selectCategory"
+      >{{item.name}}</view>
+    </scroll-view>
+    <view class="toggle {{filters.onlyRedeemable ? 'active' : ''}}" bindtap="toggleRedeemable">只看可兑换</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state">加载中...</view>
+  <view wx:elif="{{errorMessage && !rewards.length}}" class="state">{{errorMessage}}</view>
+
+  <view wx:for="{{rewards}}" wx:key="id" class="reward-card">
+    <image wx:if="{{item.hasImage}}" class="reward-image" src="{{item.imageUrl}}" mode="aspectFill" />
+    <view wx:else class="reward-image placeholder">{{item.typeLabel}}</view>
+    <view class="reward-main">
+      <view class="title-line">
+        <text class="reward-name">{{item.name}}</text>
+        <text class="reward-points">{{item.pointsText}}</text>
+      </view>
+      <text class="muted one-line">{{item.description || item.categoryName}}</text>
+      <text class="muted">{{item.stockText}} · {{item.minOrderAmountText}}</text>
+      <text class="muted">{{item.validText}}</text>
+      <view class="reward-foot">
+        <text class="status">{{item.statusLabel}}</text>
+        <button
+          class="exchange-button"
+          loading="{{exchanging}}"
+          disabled="{{exchanging || !item.canExchange}}"
+          data-id="{{item.id}}"
+          bindtap="exchange"
+        >兑换</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loadingMore}}" class="load-more">继续加载...</view>
+  <view wx:elif="{{rewards.length && !hasMore}}" class="load-more">没有更多了</view>
+</view>

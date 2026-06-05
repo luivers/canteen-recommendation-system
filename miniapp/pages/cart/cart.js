@@ -160,7 +160,7 @@ Page({
           if (orderId) {
             wx.navigateTo({ url: `/pages/order-detail/order-detail?id=${orderId}` });
           } else {
-            wx.navigateTo({ url: "/pages/orders/orders" });
+            wx.switchTab({ url: "/pages/orders/orders" });
           }
         });
       })
@@ -176,6 +176,6 @@ Page({
   },
 
   goDishes() {
-    wx.navigateTo({ url: "/pages/dishes/dishes" });
+    wx.switchTab({ url: "/pages/dishes/dishes" });
   },
 });

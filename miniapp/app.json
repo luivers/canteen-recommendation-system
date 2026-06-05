@@ -6,7 +6,13 @@
     "pages/cart/cart",
     "pages/order-detail/order-detail",
     "pages/orders/orders",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/review-submit/review-submit",
+    "pages/points-history/points-history",
+    "pages/my-reviews/my-reviews",
+    "pages/rewards/rewards",
+    "pages/exchanges/exchanges",
+    "pages/vouchers/vouchers"
   ],
   "window": {
     "navigationBarTitleText": "校园食堂推荐",
@@ -14,6 +20,34 @@
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f6f7fb",
     "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#6b7280",
+    "selectedColor": "#0f766e",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/dishes/dishes",
+        "text": "菜品"
+      },
+      {
+        "pagePath": "pages/cart/cart",
+        "text": "购物车"
+      },
+      {
+        "pagePath": "pages/orders/orders",
+        "text": "订单"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
   },
   "style": "v2",
   "lazyCodeLoading": "requiredComponents"

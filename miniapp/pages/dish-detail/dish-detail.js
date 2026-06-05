@@ -61,6 +61,6 @@ Page({
   },
 
   goCart() {
-    wx.navigateTo({ url: "/pages/cart/cart" });
+    wx.switchTab({ url: "/pages/cart/cart" });
   },
 });

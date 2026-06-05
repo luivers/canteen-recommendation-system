@@ -18,10 +18,10 @@ goals:
 
 story_summary:
   total: 24
-  completed: 13
+  completed: 15
   ready_for_dev: 1
   in_progress: 0
-  pending: 10
+  pending: 8
 
 stories:
   - id: "ST-001"
@@ -169,14 +169,20 @@ stories:
     priority: "Must"
     estimate: 3
     planned_day: "D5"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-015-miniapp-payment-request-mock-integration.md"
+    created_at: "2026-06-02"
+    completed_at: "2026-06-02"
   - id: "ST-016"
     title: "小程序评价、个人中心和积分商城主流程"
     epic: "EPIC-005"
     priority: "Must"
     estimate: 5
     planned_day: "D5"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-016-miniapp-review-profile-rewards-flow.md"
+    created_at: "2026-06-05"
+    completed_at: "2026-06-05"
   - id: "ST-017"
     title: "管理后台 demo/mock 数据开关"
     epic: "EPIC-003"
@@ -235,4 +241,4 @@ stories:
     status: "pending"
 
 next_recommended_workflow: "/bmad:create-story"
-next_story: "ST-015"
+next_story: "ST-017"

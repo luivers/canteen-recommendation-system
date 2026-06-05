@@ -156,9 +156,49 @@
   font-size: 27rpx;
 }
 
+.review-line,
+.review-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.review-score {
+  color: #dc2626;
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+.review-comment {
+  display: block;
+  margin: 12rpx 0 8rpx;
+  color: #111827;
+  font-size: 27rpx;
+  line-height: 1.5;
+}
+
+.review-entry {
+  padding: 16rpx 0;
+  color: #111827;
+  font-size: 27rpx;
+}
+
+.review-link {
+  color: #0f766e;
+  font-weight: 700;
+}
+
 .label {
   flex-shrink: 0;
   color: #6b7280;
+}
+
+.value-wrap {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .action-bar {

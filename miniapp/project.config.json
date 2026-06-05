@@ -1,7 +1,7 @@
 {
   "appid": "touristappid",
   "compileType": "miniprogram",
-  "libVersion": "latest",
+  "libVersion": "3.15.2",
   "miniprogramRoot": "./",
   "projectname": "canteen-recommendation-miniapp",
   "setting": {

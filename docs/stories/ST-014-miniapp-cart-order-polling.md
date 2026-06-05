@@ -36,6 +36,7 @@ ST-011 已完成原生微信小程序骨架和统一 request 封装，ST-012 已
 13. 订单详情页支持取消待支付/已支付订单、确认 `READY` 订单取餐；支付按钮只给出 ST-015 占位提示。
 14. 新增订单/购物车归一化工具，兼容后端裸数组、分页结构、详情对象和不同金额字段。
 15. 执行小程序 JS 语法检查和关键契约搜索；如微信开发者工具 CLI 不可用，记录原因。
+16. 追补小程序底部导航栏，支持首页、菜品、购物车、订单和我的五个主页面，并修正进入 tab 页的跳转方式。
 
 ## Dev Tasks
 
@@ -61,6 +62,9 @@ ST-011 已完成原生微信小程序骨架和统一 request 封装，ST-012 已
   - [x] 执行 miniapp JS 语法检查。
   - [x] 搜索确认关键路由/API/轮询契约。
   - [x] 记录验证结果到 Dev Agent Record。
+- [x] 追补底部导航栏：
+  - [x] 在 `miniapp/app.json` 配置五项 `tabBar`。
+  - [x] 将进入 tab 页的 `wx.navigateTo` 调整为 `wx.switchTab`。
 
 ## Verification
 
@@ -111,6 +115,7 @@ Files Changed:
 - `miniapp/pages/dish-detail/dish-detail.js`
 - `miniapp/pages/dish-detail/dish-detail.wxml`
 - `miniapp/pages/dish-detail/dish-detail.wxss`
+- `miniapp/pages/index/index.js`
 - `miniapp/pages/cart/cart.js`
 - `miniapp/pages/cart/cart.wxml`
 - `miniapp/pages/cart/cart.wxss`
@@ -131,6 +136,7 @@ Implementation Notes:
 - Reservation time is normalized to `yyyy-MM-dd HH:mm` for the existing backend parser.
 - Order detail polling is scoped to page visibility and stops for completed/cancelled orders.
 - The payment action remains a visible ST-015 placeholder so this story does not overreach into payment launch.
+- Added native miniapp bottom tab navigation for the five main pages and switched tab-page navigation calls to `wx.switchTab`.
 
 Validation:
 
