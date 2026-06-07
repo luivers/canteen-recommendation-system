@@ -1,0 +1,1 @@
+import{Ct as e,Tt as t,ft as n,mt as r}from"./vendor-qbxHm1Pm.js";import{r as i}from"./index-BzmbKuPS.js";var a={},o={class:`admin-container`};function s(i,a){let s=t(`router-view`);return e(),n(`div`,o,[r(s)])}var c=i(a,[[`render`,s],[`__scopeId`,`data-v-fd281e21`]]);export{c as default};

@@ -1,5 +1,5 @@
 const { apiBaseUrl } = require("../config/env");
-const { clearToken, getAuthHeader } = require("./auth");
+const { clearAuth, getAuthHeader } = require("./auth");
 
 const normalizePath = (url) => {
   if (!url) return "/";
@@ -55,8 +55,8 @@ const request = (options = {}) => {
           return;
         }
 
-        if (statusCode === 401) {
-          clearToken();
+        if (statusCode === 401 || statusCode === 403) {
+          clearAuth();
         }
 
         reject({
