@@ -182,6 +182,46 @@ const getBarOption = (title, xName, yName, data, color = "#409EFF", labelFormatt
   };
 };
 
+const hasRenderableRows = (rows) =>
+  Array.isArray(rows) && rows.some((item) => item.name && Number.isFinite(Number(item.value)));
+
+const showChartEmpty = (chartInstance, text = "暂无数据") => {
+  if (!chartInstance) return;
+  chartInstance.clear();
+  chartInstance.setOption({
+    ...getBarOption("暂无数据", "", "", [], "#909399"),
+    graphic: [
+      {
+        id: "emptyText",
+        type: "text",
+        left: "center",
+        top: "middle",
+        style: { text, fill: "#999", fontSize: 14 },
+      },
+    ],
+  });
+};
+
+const renderBarChart = (chartInstance, option) => {
+  if (!chartInstance) return;
+  chartInstance.clear();
+  chartInstance.setOption(option);
+};
+
+const normalizeRankingRows = (list, valueKeys) => {
+  const rows = Array.isArray(list) ? list : [];
+  return rows
+    .map((item) => {
+      const valueKey = valueKeys.find((key) => item?.[key] != null);
+      return {
+        ...item,
+        name: String(item?.name ?? item?.dishName ?? item?.category ?? "").trim(),
+        value: Number(valueKey ? item?.[valueKey] : 0),
+      };
+    })
+    .filter((item) => item.name && Number.isFinite(item.value));
+};
+
 // --- Initialization ---
 
 const initCharts = () => {
@@ -231,11 +271,12 @@ const fetchSalesData = async () => {
 const updateSalesChart = () => {
     if (!salesChart) return;
     const topList = salesPeriodToTop.value.get(salesPeriod.value) || [];
-    const data = topList.map(x => ({
-        name: String(x?.name ?? ""),
-        value: Number(x?.qty ?? x?.value ?? 0)
-    }));
-    salesChart.setOption(getBarOption("销量", "销量", "菜品", data, "#409EFF"));
+    const data = normalizeRankingRows(topList, ["qty", "value", "sales"]);
+    if (!hasRenderableRows(data)) {
+        showChartEmpty(salesChart, "暂无销量排行数据");
+        return;
+    }
+    renderBarChart(salesChart, getBarOption("销量", "销量", "菜品", data, "#409EFF"));
 };
 
 const fetchRatingData = async () => {
@@ -245,12 +286,16 @@ const fetchRatingData = async () => {
     try {
         const res = await statisticsApi.getDishRatingRanking("custom", props.startDate, props.endDate, minReviews.value, 10);
         const list = Array.isArray(res?.data) ? res.data : [];
-        const data = list.map(item => ({
+        const data = normalizeRankingRows(list, ["value", "avgRating", "averageRating"]).map(item => ({
             name: item.name,
-            value: item.value, // avg_rating
+            value: item.value,
             reviewCount: item.reviewCount,
             ratingCount: item.ratingCount
         }));
+        if (!hasRenderableRows(data)) {
+            showChartEmpty(ratingChart, "暂无评分排行数据");
+            return;
+        }
         
         const option = {
             tooltip: {
@@ -300,7 +345,7 @@ const fetchRatingData = async () => {
                 },
             ],
         };
-        ratingChart.setOption(option);
+        renderBarChart(ratingChart, option);
     } catch (e) {
         console.error(e);
     } finally {
@@ -315,12 +360,16 @@ const fetchTrendData = async () => {
     try {
         const res = await statisticsApi.getDishTrendRanking("custom", props.startDate, props.endDate, trendMetric.value, 10);
         const list = Array.isArray(res?.data) ? res.data : [];
-        const data = list.map(item => ({
+        const data = normalizeRankingRows(list, ["growthRate", "value", "deltaPct"]).map(item => ({
             name: item.name,
-            value: item.growthRate, // Growth rate in percentage
+            value: item.value,
             current: item.current,
             previous: item.previous
         }));
+        if (!hasRenderableRows(data)) {
+            showChartEmpty(trendChart, "暂无趋势排行数据");
+            return;
+        }
         
         // Custom option for trend to show growth rate and maybe actual values in tooltip
         const option = {
@@ -364,7 +413,7 @@ const fetchTrendData = async () => {
                 },
             }]
         };
-        trendChart.setOption(option);
+        renderBarChart(trendChart, option);
     } catch (e) {
         console.error(e);
     } finally {
@@ -403,14 +452,15 @@ const updateCategoryChart = () => {
     if (selectedCategory.value) {
         const catData = categoryList.value.find(c => c.category === selectedCategory.value);
         if (catData && Array.isArray(catData.top)) {
-            data = catData.top.map(item => ({
-                name: item.name,
-                value: item.value
-            }));
+            data = normalizeRankingRows(catData.top, ["value", "qty", "sales"]);
         }
     }
 
-    categoryChart.setOption(getBarOption(`${selectedCategory.value} TOP10`, "销量", "菜品", data, "#409EFF"));
+    if (!hasRenderableRows(data)) {
+        showChartEmpty(categoryChart, "暂无分类排行数据");
+        return;
+    }
+    renderBarChart(categoryChart, getBarOption(`${selectedCategory.value} TOP10`, "销量", "菜品", data, "#409EFF"));
 };
 
 const handleTabChange = async (tab) => {

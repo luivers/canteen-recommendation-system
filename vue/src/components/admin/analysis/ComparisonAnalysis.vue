@@ -67,15 +67,15 @@
             <template #header>总营收</template>
             <div class="metric-row">
               <span class="label">时段1:</span>
-              <span class="value">¥{{ result.metrics1.revenue.toFixed(2) }}</span>
+              <span class="value">¥{{ Number(result.metrics1.revenue || 0).toFixed(2) }}</span>
             </div>
             <div class="metric-row">
               <span class="label">时段2:</span>
-              <span class="value">¥{{ result.metrics2.revenue.toFixed(2) }}</span>
+              <span class="value">¥{{ Number(result.metrics2.revenue || 0).toFixed(2) }}</span>
             </div>
             <el-divider />
             <div class="metric-change" :class="getChangeClass(result.metrics.revenue.deltaPct)">
-              环比增长: {{ result.metrics.revenue.deltaPct }}%
+              环比增长: {{ Number(result.metrics.revenue.deltaPct || 0).toFixed(1) }}%
               <el-icon v-if="result.metrics.revenue.deltaPct >= 0"><Top /></el-icon>
               <el-icon v-else><Bottom /></el-icon>
             </div>
@@ -88,15 +88,15 @@
             <template #header>总订单数</template>
             <div class="metric-row">
               <span class="label">时段1:</span>
-              <span class="value">{{ result.metrics1.orders }}</span>
+              <span class="value">{{ Number(result.metrics1.orders || 0) }}</span>
             </div>
             <div class="metric-row">
               <span class="label">时段2:</span>
-              <span class="value">{{ result.metrics2.orders }}</span>
+              <span class="value">{{ Number(result.metrics2.orders || 0) }}</span>
             </div>
              <el-divider />
             <div class="metric-change" :class="getChangeClass(result.metrics.orders.deltaPct)">
-              环比增长: {{ result.metrics.orders.deltaPct }}%
+              环比增长: {{ Number(result.metrics.orders.deltaPct || 0).toFixed(1) }}%
                <el-icon v-if="result.metrics.orders.deltaPct >= 0"><Top /></el-icon>
               <el-icon v-else><Bottom /></el-icon>
             </div>
@@ -109,15 +109,15 @@
             <template #header>平均客单价</template>
             <div class="metric-row">
               <span class="label">时段1:</span>
-              <span class="value">¥{{ result.metrics1.avgOrderValue.toFixed(2) }}</span>
+              <span class="value">¥{{ Number(result.metrics1.avgOrderValue || 0).toFixed(2) }}</span>
             </div>
             <div class="metric-row">
               <span class="label">时段2:</span>
-              <span class="value">¥{{ result.metrics2.avgOrderValue.toFixed(2) }}</span>
+              <span class="value">¥{{ Number(result.metrics2.avgOrderValue || 0).toFixed(2) }}</span>
             </div>
              <el-divider />
             <div class="metric-change" :class="getChangeClass(result.metrics.avgOrderValue.deltaPct)">
-              环比增长: {{ result.metrics.avgOrderValue.deltaPct }}%
+              环比增长: {{ Number(result.metrics.avgOrderValue.deltaPct || 0).toFixed(1) }}%
                <el-icon v-if="result.metrics.avgOrderValue.deltaPct >= 0"><Top /></el-icon>
               <el-icon v-else><Bottom /></el-icon>
             </div>
@@ -132,25 +132,31 @@
         <el-tabs type="border-card">
           <!-- 品类对比 -->
           <el-tab-pane label="按品类">
-            <el-table :data="result.breakdowns.byCategory" stripe style="width: 100%" :default-sort="{ prop: 'delta', order: 'descending' }">
+            <el-table
+              :data="result.breakdowns.byCategory"
+              stripe
+              style="width: 100%"
+              :default-sort="{ prop: 'delta', order: 'descending' }"
+              empty-text="暂无品类对比数据"
+            >
               <el-table-column prop="name" label="品类名称" />
               <el-table-column prop="a" label="时段1销量" sortable>
-                <template #default="scope">¥{{ scope.row.a.toFixed(2) }}</template>
+                <template #default="scope">¥{{ Number(scope.row.a || 0).toFixed(2) }}</template>
               </el-table-column>
               <el-table-column prop="b" label="时段2销量" sortable>
-                <template #default="scope">¥{{ scope.row.b.toFixed(2) }}</template>
+                <template #default="scope">¥{{ Number(scope.row.b || 0).toFixed(2) }}</template>
               </el-table-column>
               <el-table-column prop="delta" label="变化量" sortable>
                 <template #default="scope">
                   <span :class="getChangeClass(scope.row.delta)">
-                    {{ scope.row.delta > 0 ? '+' : '' }}{{ scope.row.delta.toFixed(2) }}
+                    {{ scope.row.delta > 0 ? '+' : '' }}{{ Number(scope.row.delta || 0).toFixed(2) }}
                   </span>
                 </template>
               </el-table-column>
               <el-table-column prop="deltaPct" label="变化率" sortable>
                 <template #default="scope">
                   <span :class="getChangeClass(scope.row.deltaPct)" v-if="scope.row.deltaPct !== null">
-                    {{ scope.row.deltaPct }}%
+                    {{ Number(scope.row.deltaPct || 0).toFixed(1) }}%
                   </span>
                   <span v-else>-</span>
                 </template>
@@ -160,25 +166,31 @@
 
           <!-- 窗口对比 -->
           <el-tab-pane label="按窗口">
-            <el-table :data="result.breakdowns.byWindow" stripe style="width: 100%" :default-sort="{ prop: 'delta', order: 'descending' }">
+            <el-table
+              :data="result.breakdowns.byWindow"
+              stripe
+              style="width: 100%"
+              :default-sort="{ prop: 'delta', order: 'descending' }"
+              empty-text="暂无窗口对比数据"
+            >
               <el-table-column prop="name" label="窗口名称" />
               <el-table-column prop="a" label="时段1销量" sortable>
-                <template #default="scope">¥{{ scope.row.a.toFixed(2) }}</template>
+                <template #default="scope">¥{{ Number(scope.row.a || 0).toFixed(2) }}</template>
               </el-table-column>
               <el-table-column prop="b" label="时段2销量" sortable>
-                <template #default="scope">¥{{ scope.row.b.toFixed(2) }}</template>
+                <template #default="scope">¥{{ Number(scope.row.b || 0).toFixed(2) }}</template>
               </el-table-column>
               <el-table-column prop="delta" label="变化量" sortable>
                 <template #default="scope">
                   <span :class="getChangeClass(scope.row.delta)">
-                    {{ scope.row.delta > 0 ? '+' : '' }}{{ scope.row.delta.toFixed(2) }}
+                    {{ scope.row.delta > 0 ? '+' : '' }}{{ Number(scope.row.delta || 0).toFixed(2) }}
                   </span>
                 </template>
               </el-table-column>
               <el-table-column prop="deltaPct" label="变化率" sortable>
                 <template #default="scope">
                   <span :class="getChangeClass(scope.row.deltaPct)" v-if="scope.row.deltaPct !== null">
-                    {{ scope.row.deltaPct }}%
+                    {{ Number(scope.row.deltaPct || 0).toFixed(1) }}%
                   </span>
                   <span v-else>-</span>
                 </template>
@@ -188,25 +200,31 @@
 
           <!-- 菜品对比 -->
           <el-tab-pane label="按菜品">
-            <el-table :data="result.breakdowns.byDish" stripe style="width: 100%" :default-sort="{ prop: 'delta', order: 'descending' }">
+            <el-table
+              :data="result.breakdowns.byDish"
+              stripe
+              style="width: 100%"
+              :default-sort="{ prop: 'delta', order: 'descending' }"
+              empty-text="暂无菜品对比数据"
+            >
               <el-table-column prop="name" label="菜品名称" />
               <el-table-column prop="a" label="时段1销量" sortable>
-                <template #default="scope">¥{{ scope.row.a.toFixed(2) }}</template>
+                <template #default="scope">¥{{ Number(scope.row.a || 0).toFixed(2) }}</template>
               </el-table-column>
               <el-table-column prop="b" label="时段2销量" sortable>
-                <template #default="scope">¥{{ scope.row.b.toFixed(2) }}</template>
+                <template #default="scope">¥{{ Number(scope.row.b || 0).toFixed(2) }}</template>
               </el-table-column>
               <el-table-column prop="delta" label="变化量" sortable>
                 <template #default="scope">
                   <span :class="getChangeClass(scope.row.delta)">
-                    {{ scope.row.delta > 0 ? '+' : '' }}{{ scope.row.delta.toFixed(2) }}
+                    {{ scope.row.delta > 0 ? '+' : '' }}{{ Number(scope.row.delta || 0).toFixed(2) }}
                   </span>
                 </template>
               </el-table-column>
               <el-table-column prop="deltaPct" label="变化率" sortable>
                 <template #default="scope">
                   <span :class="getChangeClass(scope.row.deltaPct)" v-if="scope.row.deltaPct !== null">
-                    {{ scope.row.deltaPct }}%
+                    {{ Number(scope.row.deltaPct || 0).toFixed(1) }}%
                   </span>
                   <span v-else>-</span>
                 </template>
@@ -216,6 +234,7 @@
         </el-tabs>
       </div>
     </div>
+    <el-empty v-else-if="!loading" description="暂无对比分析数据" />
   </div>
 </template>
 
@@ -242,10 +261,62 @@ const canteens = ref([]);
 const windows1 = ref([]);
 const windows2 = ref([]);
 
+const emptyMetricDelta = { delta: 0, deltaPct: 0 };
+
+const normalizeMetricDelta = (raw) => ({
+  delta: Number(raw?.delta ?? 0),
+  deltaPct: Number(raw?.deltaPct ?? 0),
+});
+
+const normalizeBreakdownRows = (rows) => {
+  const list = Array.isArray(rows) ? rows : [];
+  return list
+    .map((item) => ({
+      name: String(item?.name ?? item?.label ?? '-').trim() || '-',
+      a: Number(item?.a ?? item?.valueA ?? item?.first ?? 0),
+      b: Number(item?.b ?? item?.valueB ?? item?.second ?? 0),
+      delta: Number(item?.delta ?? 0),
+      deltaPct: item?.deltaPct == null ? null : Number(item.deltaPct),
+    }));
+};
+
+const normalizeComparisonResult = (raw) => {
+  const data = raw || {};
+  const metrics1 = data.metrics1 || {};
+  const metrics2 = data.metrics2 || {};
+  const metrics = data.metrics || {};
+  const breakdowns = data.breakdowns || {};
+  return {
+    metrics1: {
+      revenue: Number(metrics1?.revenue ?? 0),
+      orders: Number(metrics1?.orders ?? 0),
+      avgOrderValue: Number(metrics1?.avgOrderValue ?? 0),
+    },
+    metrics2: {
+      revenue: Number(metrics2?.revenue ?? 0),
+      orders: Number(metrics2?.orders ?? 0),
+      avgOrderValue: Number(metrics2?.avgOrderValue ?? 0),
+    },
+    metrics: {
+      revenue: normalizeMetricDelta(metrics?.revenue || emptyMetricDelta),
+      orders: normalizeMetricDelta(metrics?.orders || emptyMetricDelta),
+      avgOrderValue: normalizeMetricDelta(metrics?.avgOrderValue || emptyMetricDelta),
+    },
+    breakdowns:
+      data.breakdowns || includeBreakdowns.value
+        ? {
+            byCategory: normalizeBreakdownRows(breakdowns?.byCategory),
+            byWindow: normalizeBreakdownRows(breakdowns?.byWindow),
+            byDish: normalizeBreakdownRows(breakdowns?.byDish),
+          }
+        : null,
+  };
+};
+
 const fetchCanteens = async () => {
   try {
     const res = await canteenApi.getAll();
-    canteens.value = res.data;
+    canteens.value = Array.isArray(res?.data) ? res.data : [];
   } catch (error) {
     console.error('Failed to fetch canteens:', error);
   }
@@ -259,7 +330,7 @@ const fetchWindows1 = async () => {
   }
   try {
     const res = await windowApi.getWindowsByCanteenId(canteenId1.value);
-    windows1.value = res.data;
+    windows1.value = Array.isArray(res?.data) ? res.data : [];
   } catch (error) {
     console.error('Failed to fetch windows 1:', error);
   }
@@ -273,7 +344,7 @@ const fetchWindows2 = async () => {
   }
   try {
     const res = await windowApi.getWindowsByCanteenId(canteenId2.value);
-    windows2.value = res.data;
+    windows2.value = Array.isArray(res?.data) ? res.data : [];
   } catch (error) {
     console.error('Failed to fetch windows 2:', error);
   }
@@ -303,7 +374,7 @@ const fetchData = async () => {
       canteenId2.value,
       windowId2.value
     );
-    result.value = res.data;
+    result.value = normalizeComparisonResult(res?.data);
   } catch (error) {
     console.error('Failed to fetch comparison analysis:', error);
     ElMessage.error('对比分析失败');

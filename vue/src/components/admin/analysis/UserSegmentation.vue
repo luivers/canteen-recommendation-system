@@ -58,7 +58,13 @@
     </el-row>
 
     <!-- 分群列表 -->
-    <el-table :data="segments" style="width: 100%" v-loading="loading" border>
+    <el-table
+      :data="segments"
+      style="width: 100%"
+      v-loading="loading"
+      border
+      empty-text="暂无用户分群数据"
+    >
       <el-table-column prop="segmentCode" label="分群类型" width="150">
         <template #default="scope">
           <el-tag :type="getSegmentTagType(scope.row.segmentCode)">{{ getSegmentName(scope.row.segmentCode) }}</el-tag>
@@ -66,13 +72,13 @@
       </el-table-column>
       <el-table-column prop="userCount" label="用户数" width="120" sortable />
       <el-table-column prop="avgSpent" label="平均消费金额" width="150" sortable>
-        <template #default="scope">¥{{ scope.row.avgSpent.toFixed(2) }}</template>
+        <template #default="scope">¥{{ Number(scope.row.avgSpent || 0).toFixed(2) }}</template>
       </el-table-column>
       <el-table-column prop="avgOrders" label="平均订单数" width="150" sortable>
-        <template #default="scope">{{ scope.row.avgOrders.toFixed(1) }}</template>
+        <template #default="scope">{{ Number(scope.row.avgOrders || 0).toFixed(1) }}</template>
       </el-table-column>
       <el-table-column prop="avgRecency" label="平均未消费天数" width="150" sortable>
-        <template #default="scope">{{ scope.row.avgRecency.toFixed(1) }} 天</template>
+        <template #default="scope">{{ Number(scope.row.avgRecency || 0).toFixed(1) }} 天</template>
       </el-table-column>
       <el-table-column label="操作" width="120">
         <template #default="scope">
@@ -83,10 +89,16 @@
 
     <!-- 用户列表弹窗 -->
     <el-dialog v-model="dialogVisible" title="分群用户详情" width="70%">
-      <el-table :data="userList" v-loading="usersLoading" border height="400">
+      <el-table
+        :data="userList"
+        v-loading="usersLoading"
+        border
+        height="400"
+        empty-text="暂无该分群用户"
+      >
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="totalSpent" label="总消费" width="120">
-          <template #default="scope">¥{{ scope.row.totalSpent.toFixed(2) }}</template>
+          <template #default="scope">¥{{ Number(scope.row.totalSpent || 0).toFixed(2) }}</template>
         </el-table-column>
         <el-table-column prop="orderCount" label="订单数" width="100" />
         <el-table-column prop="recencyDays" label="未消费天数" width="120" />
@@ -165,7 +177,7 @@ const formatDateTime = (str) => {
 const fetchCanteens = async () => {
   try {
     const res = await canteenApi.getAll();
-    canteens.value = res.data;
+    canteens.value = Array.isArray(res?.data) ? res.data : [];
   } catch (error) {
     console.error('Failed to fetch canteens:', error);
   }
@@ -179,7 +191,7 @@ const fetchWindows = async () => {
   }
   try {
     const res = await windowApi.getWindowsByCanteenId(canteenId.value);
-    windows.value = res.data;
+    windows.value = Array.isArray(res?.data) ? res.data : [];
   } catch (error) {
     console.error('Failed to fetch windows:', error);
   }
@@ -209,7 +221,20 @@ const fetchData = async () => {
         avgRecency: Number(metrics?.avgRecencyDays ?? item?.avgRecency ?? 0)
       };
     });
-    summary.value = res?.data?.summary || null;
+    const rawSummary = res?.data?.summary;
+    summary.value = rawSummary
+      ? {
+          totalUsers: Number(rawSummary?.totalUsers ?? 0),
+          avgSpent: Number(rawSummary?.avgSpent ?? 0).toFixed(2),
+          avgOrders: Number(rawSummary?.avgOrders ?? 0).toFixed(1),
+          avgRecency: Number(rawSummary?.avgRecency ?? 0).toFixed(1),
+        }
+      : {
+          totalUsers: segments.value.reduce((sum, item) => sum + Number(item.userCount || 0), 0),
+          avgSpent: '0.00',
+          avgOrders: '0.0',
+          avgRecency: '0.0',
+        };
   } catch (error) {
     console.error('Failed to fetch user segmentation:', error);
     ElMessage.error('获取用户分群失败');

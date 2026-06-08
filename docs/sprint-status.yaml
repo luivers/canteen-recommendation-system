@@ -18,10 +18,10 @@ goals:
 
 story_summary:
   total: 24
-  completed: 16
+  completed: 18
   ready_for_dev: 1
   in_progress: 0
-  pending: 7
+  pending: 5
 
 stories:
   - id: "ST-001"
@@ -199,14 +199,20 @@ stories:
     priority: "Must"
     estimate: 2
     planned_day: "D5"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-018-empty-chart-fallback-and-nonempty-validation.md"
+    created_at: "2026-06-07"
+    completed_at: "2026-06-07"
   - id: "ST-019"
     title: "Web 核心路径冒烟测试与 console 错误清零"
     epic: "EPIC-007"
     priority: "Must"
     estimate: 3
     planned_day: "D6"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-019-web-core-smoke-console-zero.md"
+    created_at: "2026-06-07"
+    completed_at: "2026-06-07"
   - id: "ST-020"
     title: "后端核心路径冒烟测试：登录、下单、支付、评价、积分"
     epic: "EPIC-007"
@@ -244,4 +250,4 @@ stories:
     status: "pending"
 
 next_recommended_workflow: "/bmad:create-story"
-next_story: "ST-018"
+next_story: "ST-020"
