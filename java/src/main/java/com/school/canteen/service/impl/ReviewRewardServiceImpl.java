@@ -43,7 +43,7 @@ public class ReviewRewardServiceImpl implements ReviewRewardService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void processReviewReward(Long reviewId) {
         if (reviewId == null) {
             return;
@@ -152,8 +152,7 @@ public class ReviewRewardServiceImpl implements ReviewRewardService {
         record.setPointsAwarded(points);
         recordRepository.save(record);
         
-        // 更新用户积分 (原子操作)
-        userRepository.addPoints(user.getId(), points);
+        userService.addPoints(user.getId(), points);
         
         // 记录积分日志
         userService.logEarn(user, points, PointLog.PointSource.REVIEW_REWARD, 

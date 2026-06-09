@@ -18,10 +18,10 @@ goals:
 
 story_summary:
   total: 24
-  completed: 18
+  completed: 21
   ready_for_dev: 1
   in_progress: 0
-  pending: 5
+  pending: 2
 
 stories:
   - id: "ST-001"
@@ -219,7 +219,10 @@ stories:
     priority: "Must"
     estimate: 3
     planned_day: "D6"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-020-backend-core-smoke-login-order-payment-review-points.md"
+    created_at: "2026-06-08"
+    completed_at: "2026-06-08"
   - id: "ST-021"
     title: "本地启动文档与 10 分钟 demo 脚本"
     epic: "EPIC-006"
@@ -240,14 +243,20 @@ stories:
     priority: "Must"
     estimate: 2
     planned_day: "D7"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-023-pre-release-package-check-delivery-list.md"
+    created_at: "2026-06-08"
+    completed_at: "2026-06-08"
   - id: "ST-024"
     title: "回归问题修复缓冲"
     epic: "EPIC-007"
     priority: "Should"
     estimate: 4
     planned_day: "D7"
-    status: "pending"
+    status: "completed"
+    story_file: "docs/stories/ST-024-regression-fix-buffer.md"
+    created_at: "2026-06-08"
+    completed_at: "2026-06-08"
 
 next_recommended_workflow: "/bmad:create-story"
-next_story: "ST-020"
+next_story: "ST-021"
