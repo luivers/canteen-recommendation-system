@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:canteen_smoke;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+jwt:
+  secret: smoke-test-jwt-secret-at-least-32-bytes-long
+  expiration: 86400000
+
+payment:
+  mode: mock
+  mock:
+    enabled: true
+    qr-code-url: mock://canteen-payment
+    redirect-url: http://localhost/payment-result
+
+file:
+  upload-dir: ${java.io.tmpdir}/canteen-smoke-uploads
+
+logging:
+  level:
+    root: WARN
+    com.school.canteen: INFO

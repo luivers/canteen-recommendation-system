@@ -509,6 +509,14 @@ const summary = ref({
 const realTimeOrders = ref([]);
 const lastUpdateTime = ref("");
 
+const demoRealTimeOrders = [
+  { id: "demo-1", orderNumber: "DEMO20260607001", amount: 32.5, time: "12:18:06" },
+  { id: "demo-2", orderNumber: "DEMO20260607002", amount: 18.0, time: "12:10:42" },
+  { id: "demo-3", orderNumber: "DEMO20260607003", amount: 26.8, time: "11:58:31" },
+  { id: "demo-4", orderNumber: "DEMO20260607004", amount: 21.5, time: "11:45:19" },
+  { id: "demo-5", orderNumber: "DEMO20260607005", amount: 15.0, time: "11:36:08" },
+];
+
 const revenueTrendChartRef = ref(null);
 let revenueTrendChart = null;
 let echartsModule = null;
@@ -849,11 +857,13 @@ const loadData = async () => {
       endDate,
     );
     const revenuePromise = fetchRevenueTrend(timeRange, startDate, endDate);
-    const ordersPromise = orderApi.getOrders({
-      page: 0,
-      size: 5,
-      sort: "createdAt,desc",
-    });
+    const ordersPromise = statisticsApi.isDemoEnabled()
+      ? Promise.resolve({ data: { content: demoRealTimeOrders } })
+      : orderApi.getOrders({
+          page: 0,
+          size: 5,
+          sort: "createdAt,desc",
+        });
 
     const [metricsResult, revenueResult, ordersResult] =
       await Promise.allSettled([metricsPromise, revenuePromise, ordersPromise]);
@@ -885,8 +895,8 @@ const loadData = async () => {
         (order) => ({
           id: order.id,
           orderNumber: order.orderNumber,
-          amount: order.totalAmount,
-          time: new Date(order.createdAt).toLocaleTimeString("zh-CN"),
+          amount: order.totalAmount ?? order.amount ?? 0,
+          time: order.time || new Date(order.createdAt).toLocaleTimeString("zh-CN"),
         }),
       );
     } else {

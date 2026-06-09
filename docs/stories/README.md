@@ -6,7 +6,7 @@
 - [Sprint Plan](../sprint-plan-canteen-recommendation-2026-05-17.md)
 - [Sprint Status](../sprint-status.yaml)
 
-下一步建议执行 `/bmad:create-story ST-017`。
+下一步建议执行 `/bmad:create-story ST-021`。
 
 已创建故事：
 
@@ -26,3 +26,9 @@
 - [ST-014: 小程序购物车、下单、订单列表和订单详情轮询](ST-014-miniapp-cart-order-polling.md)
 - [ST-015: 小程序支付拉起、取消 / 失败提示和 mock 支付联调](ST-015-miniapp-payment-request-mock-integration.md)
 - [ST-016: 小程序评价、个人中心和积分商城主流流程](ST-016-miniapp-review-profile-rewards-flow.md)
+- [ST-017: 管理后台 demo/mock 数据开关](ST-017-admin-demo-mock-data-toggle.md)
+- [ST-018: 空数据图表降级与图表非空验收](ST-018-empty-chart-fallback-and-nonempty-validation.md)
+- [ST-019: Web 核心路径冒烟测试与 console 错误清零](ST-019-web-core-smoke-console-zero.md)
+- [ST-020: 后端核心路径冒烟测试：登录、下单、支付、评价、积分](ST-020-backend-core-smoke-login-order-payment-review-points.md)
+- [ST-023: 发布前打包检查与交付清单](ST-023-pre-release-package-check-delivery-list.md)
+- [ST-024: 回归问题修复缓冲](ST-024-regression-fix-buffer.md)

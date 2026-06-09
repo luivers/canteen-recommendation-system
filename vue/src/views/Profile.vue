@@ -763,6 +763,26 @@ const sanitizeDietaryTags = (tags, dietaryRestrictions = "") => {
   );
 };
 
+const normalizeTagList = (payload) => {
+  const raw =
+    payload?.data?.data ??
+    payload?.data?.content ??
+    payload?.data?.records ??
+    payload?.data ??
+    payload?.content ??
+    payload?.records ??
+    payload;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) =>
+      typeof item === "string"
+        ? item
+        : item?.name || item?.tagName || item?.label || "",
+    )
+    .map((item) => String(item).trim())
+    .filter(Boolean);
+};
+
 // 保存偏好设置
 const savePreferences = async () => {
   try {
@@ -846,7 +866,7 @@ const loadAllDietaryTags = async () => {
     loadingTags.value = true;
     const response = await api.get("/api/users/dietary-tags");
     if (response.status === 200 && response.data) {
-      allDietaryTags.value = response.data;
+      allDietaryTags.value = normalizeTagList(response);
     }
   } catch (error) {
     console.error("加载饮食标签失败:", error);

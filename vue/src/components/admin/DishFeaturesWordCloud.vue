@@ -107,6 +107,17 @@ const createSeededRandom = (seed) => {
   };
 };
 
+const normalizeKeywords = (keywords) => {
+  const rows = Array.isArray(keywords) ? keywords : [];
+  return rows
+    .map((item) => ({
+      ...item,
+      name: String(item?.name ?? item?.word ?? item?.keyword ?? "").trim(),
+      value: Number(item?.value ?? item?.weight ?? item?.count ?? item?.frequency ?? 0),
+    }))
+    .filter((item) => item.name && Number.isFinite(item.value) && item.value > 0);
+};
+
 const initChart = () => {
   if (!chartRef.value || chart) return;
   chart = echarts.init(chartRef.value);
@@ -134,7 +145,7 @@ const buildParams = () => {
 const renderWordcloud = () => {
   if (!chart) return;
   const keywords = Array.isArray(stats.value?.keywords)
-    ? stats.value.keywords
+    ? normalizeKeywords(stats.value.keywords)
     : [];
   if (keywords.length === 0) {
     chart.clear();
@@ -194,7 +205,7 @@ const renderWordcloud = () => {
             focus: "self",
             textStyle: { shadowBlur: 10, shadowColor: "#333" },
           },
-          data: keywords.map((k) => ({ ...k, name: k.name, value: k.value })),
+          data: keywords,
         },
       ],
     },
@@ -212,7 +223,7 @@ const fetchData = async () => {
       version: data.version || 0,
       matchedReviews: data.matchedReviews || 0,
       coveredDishes: data.coveredDishes || 0,
-      keywords: data.keywords || [],
+      keywords: normalizeKeywords(data.keywords),
     };
     renderWordcloud();
   } finally {
@@ -259,7 +270,7 @@ const loadDrawerRows = async (kw) => {
       ...params,
       keyword: kw,
     });
-    drawerRows.value = res?.data || [];
+    drawerRows.value = Array.isArray(res?.data) ? res.data : [];
   } finally {
     drawerLoading.value = false;
   }

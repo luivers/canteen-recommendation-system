@@ -38,7 +38,13 @@
     </div>
 
     <!-- 数据表格 -->
-    <el-table :data="rules" style="width: 100%" v-loading="loading" border>
+    <el-table
+      :data="rules"
+      style="width: 100%"
+      v-loading="loading"
+      border
+      empty-text="暂无菜品搭配数据"
+    >
       <el-table-column prop="pairName" label="菜品搭配组合" min-width="300">
         <template #default="scope">
            <el-tag effect="plain">{{ scope.row.itemA }}</el-tag> 
@@ -51,7 +57,7 @@
         <template #default="scope">
           <div class="flex items-center">
             <el-progress 
-              :percentage="Math.min(scope.row.support * 100, 100)" 
+              :percentage="Math.min(Number(scope.row.support || 0) * 100, 100)"
               :format="() => scope.row.percentage"
               style="width: 150px; margin-right: 10px"
             />
@@ -63,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { statisticsApi } from '@/api/statistics';
 import { ElMessage } from 'element-plus';
 
@@ -110,7 +116,21 @@ const fetchData = async () => {
     );
     
     // 后端现在返回 List<Map>，包含 itemA, itemB, count, support, percentage
-    rules.value = Array.isArray(res?.data) ? res.data : [];
+    const rawRules = Array.isArray(res?.data) ? res.data : [];
+    rules.value = rawRules
+      .map((item) => {
+        const support = Number(item?.support ?? 0);
+        return {
+          itemA: String(item?.itemA ?? '').trim(),
+          itemB: String(item?.itemB ?? '').trim(),
+          count: Number(item?.count ?? 0),
+          support,
+          percentage:
+            item?.percentage ??
+            `${(Number.isFinite(support) ? support * 100 : 0).toFixed(1)}%`,
+        };
+      })
+      .filter((item) => item.itemA && item.itemB);
 
   } catch (error) {
     console.error('Failed to fetch pairings:', error);

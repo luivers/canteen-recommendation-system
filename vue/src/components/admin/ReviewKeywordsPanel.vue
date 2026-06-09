@@ -117,8 +117,43 @@ const hashToColor = (text) => {
   return `rgb(${r},${g},${b})`;
 };
 
+const normalizeKeywords = (keywords) => {
+  const rows = Array.isArray(keywords) ? keywords : [];
+  return rows
+    .map((item) => ({
+      ...item,
+      name: String(item?.name ?? item?.word ?? item?.keyword ?? "").trim(),
+      value: Number(item?.value ?? item?.count ?? item?.frequency ?? 0),
+    }))
+    .filter((item) => item.name && Number.isFinite(item.value) && item.value > 0);
+};
+
+const showEmpty = (text = "暂无评价关键词") => {
+  if (!chart) return;
+  chart.clear();
+  chart.setOption(
+    {
+      graphic: [
+        {
+          id: "emptyText",
+          type: "text",
+          left: "center",
+          top: "middle",
+          style: { text, fill: "#999", fontSize: 14 },
+        },
+      ],
+    },
+    { notMerge: true, lazyUpdate: false },
+  );
+};
+
 const updateChart = (keywords) => {
   if (!chart) return;
+  const chartKeywords = normalizeKeywords(keywords);
+  if (chartKeywords.length === 0) {
+    showEmpty();
+    return;
+  }
   chart.clear();
 
   const seed =
@@ -161,7 +196,7 @@ const updateChart = (keywords) => {
             shadowColor: "#333",
           },
         },
-        data: keywords,
+        data: chartKeywords,
       },
     ],
   };
@@ -180,11 +215,17 @@ const fetchData = async () => {
       sentiment: currentSentiment.value,
     };
     const res = await statisticsApi.getReviewKeywordsPreview(payload);
-    const data = res.data;
-    stats.value = data;
-    updateChart(data.keywords);
+    const data = res?.data || {};
+    stats.value = {
+      totalReviews: Number(data?.totalReviews ?? 0),
+      matchedReviews: Number(data?.matchedReviews ?? 0),
+      keywords: normalizeKeywords(data?.keywords),
+      sampleReviews: Array.isArray(data?.sampleReviews) ? data.sampleReviews : [],
+    };
+    updateChart(stats.value.keywords);
   } catch (e) {
     console.error(e);
+    showEmpty("加载失败");
   } finally {
     loading.value = false;
   }

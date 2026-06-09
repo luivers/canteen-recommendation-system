@@ -28,11 +28,13 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     
     Long countByRole(User.UserRole role);
 
-    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
     @org.springframework.data.jpa.repository.Query("UPDATE User u SET u.points = COALESCE(u.points, 0) + :points WHERE u.id = :userId")
     int addPoints(@org.springframework.data.repository.query.Param("userId") Long userId, @org.springframework.data.repository.query.Param("points") Integer points);
 
-    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
     @org.springframework.data.jpa.repository.Query("UPDATE User u SET u.points = COALESCE(u.points, 0) - :points WHERE u.id = :userId AND COALESCE(u.points, 0) >= :points")
     int deductPoints(@org.springframework.data.repository.query.Param("userId") Long userId, @org.springframework.data.repository.query.Param("points") Integer points);
 }

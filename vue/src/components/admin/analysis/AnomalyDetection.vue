@@ -26,13 +26,19 @@
     </div>
 
     <!-- 异常列表 -->
-    <el-table :data="anomalies" style="width: 100%" v-loading="loading" border>
+    <el-table
+      :data="anomalies"
+      style="width: 100%"
+      v-loading="loading"
+      border
+      empty-text="暂无库存预警数据"
+    >
       <el-table-column prop="dishName" label="菜品名称" min-width="150" sortable />
       <el-table-column prop="date" label="日期" width="120" sortable />
       <el-table-column prop="sales" label="今日销量" width="120" sortable />
       <el-table-column label="总供应量(库存+销量)" width="180">
         <template #default="scope">
-          {{ scope.row.totalSupply }}
+          {{ Number(scope.row.totalSupply || 0) }}
           <span v-if="scope.row.stock !== null" class="text-gray-400 text-xs">
              (剩余: {{ scope.row.stock }})
           </span>
@@ -41,9 +47,9 @@
       <el-table-column label="销售占比" width="200">
         <template #default="scope">
            <el-progress 
-             :percentage="Math.min(scope.row.ratio * 100, 100)" 
+             :percentage="Math.min(Number(scope.row.ratio || 0) * 100, 100)"
              :status="scope.row.ratio >= 0.9 ? 'exception' : (scope.row.ratio >= 0.8 ? 'warning' : 'success')"
-             :format="percentage => (scope.row.ratio * 100).toFixed(1) + '%'"
+             :format="() => (Number(scope.row.ratio || 0) * 100).toFixed(1) + '%'"
            />
         </template>
       </el-table-column>
@@ -85,10 +91,16 @@ const fetchData = async () => {
       filters.date,
       filters.dishName
     );
-    anomalies.value = res.data;
-    if (anomalies.value.length === 0) {
-        // Optional: show info only if user manually clicked search, or just keep silent to avoid noise on load
-    }
+    const rawAnomalies = Array.isArray(res?.data) ? res.data : [];
+    anomalies.value = rawAnomalies.map((item) => ({
+      dishName: item?.dishName ?? '-',
+      date: item?.date ?? filters.date,
+      sales: Number(item?.sales ?? 0),
+      stock: item?.stock == null ? null : Number(item.stock),
+      totalSupply: Number(item?.totalSupply ?? item?.supply ?? 0),
+      ratio: Number(item?.ratio ?? 0),
+      alertMessage: item?.alertMessage ?? '',
+    }));
   } catch (error) {
     console.error('Failed to fetch inventory warning:', error);
     ElMessage.error('获取库存预警失败');

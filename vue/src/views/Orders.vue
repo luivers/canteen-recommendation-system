@@ -122,16 +122,16 @@
 
                   <div class="item-info">
                     <h4 class="item-name">
-                      {{ item.dish.name }}
+                      {{ getOrderItemName(item) }}
                       <el-tag v-if="item.isGift" type="danger" size="small" effect="dark" style="margin-left: 5px">赠品</el-tag>
                     </h4>
                     <p class="item-price">
-                      ¥{{ item.unitPrice ?? item.dish.price }} × {{ item.quantity }}
+                      ¥{{ getOrderItemPrice(item).toFixed(2) }} × {{ item.quantity }}
                     </p>
                   </div>
 
                   <div class="item-subtotal">
-                    ¥{{ (item.subtotal ?? ((item.unitPrice ?? item.dish.price) * item.quantity)).toFixed(2) }}
+                    ¥{{ getOrderItemSubtotal(item).toFixed(2) }}
                   </div>
                 </div>
               </div>
@@ -305,9 +305,11 @@
 
         <h4>订单菜品</h4>
         <el-table :data="currentOrder.items" style="width: 100%">
-          <el-table-column prop="dish.name" label="菜品名称" />
-          <el-table-column prop="dish.price" label="单价" width="100">
-            <template #default="scope"> ¥{{ scope.row.dish.price }} </template>
+          <el-table-column label="菜品名称">
+            <template #default="scope">{{ getOrderItemName(scope.row) }}</template>
+          </el-table-column>
+          <el-table-column label="单价" width="100">
+            <template #default="scope"> ¥{{ getOrderItemPrice(scope.row).toFixed(2) }} </template>
           </el-table-column>
           <el-table-column prop="quantity" label="数量" width="80" />
           <el-table-column label="取餐方式" width="110">
@@ -317,7 +319,7 @@
           </el-table-column>
           <el-table-column label="小计" width="100">
             <template #default="scope">
-              ¥{{ (scope.row.subtotal ?? ((scope.row.unitPrice ?? scope.row.dish.price) * scope.row.quantity)).toFixed(2) }}
+              ¥{{ getOrderItemSubtotal(scope.row).toFixed(2) }}
             </template>
           </el-table-column>
         </el-table>
@@ -769,6 +771,35 @@ const getImageUrl = (url) => {
   if (url.startsWith("/")) return url;
   const base = api?.defaults?.baseURL || "";
   return `${base}/uploads/${url}`;
+};
+
+const getOrderItemName = (item = {}) => {
+  return (
+    item?.dish?.name ||
+    item?.dishName ||
+    item?.name ||
+    item?.combo?.name ||
+    item?.comboName ||
+    "未知菜品"
+  );
+};
+
+const getOrderItemPrice = (item = {}) => {
+  return Number(
+    item?.unitPrice ??
+      item?.price ??
+      item?.dish?.price ??
+      item?.combo?.price ??
+      0,
+  );
+};
+
+const getOrderItemSubtotal = (item = {}) => {
+  const subtotal = item?.subtotal;
+  if (subtotal !== undefined && subtotal !== null) {
+    return Number(subtotal || 0);
+  }
+  return getOrderItemPrice(item) * Number(item?.quantity || 0);
 };
 
 // 获取状态类型
